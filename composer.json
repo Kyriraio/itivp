@@ -1,0 +1,12 @@
+{
+  "autoload": {
+    "psr-4": {
+      "Api\\": "lib/Api/",
+      "Application\\": "lib/Application/",
+      "Database\\": "lib/Database/"
+    }
+  },
+  "require": {
+    "ext-pdo": "*"
+  }
+}
