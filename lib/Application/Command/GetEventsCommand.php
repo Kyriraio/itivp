@@ -29,7 +29,7 @@ class GetEventsCommand
     }
 
     private function getEvents(?string $startDate, ?string $endDate): array {
-        $sql = "SELECT * FROM events WHERE 1 = 1";
+        $sql = "SELECT * FROM events";
         $params = [];
 
         // Фильтрация по дате начала

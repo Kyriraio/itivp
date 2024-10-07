@@ -36,15 +36,15 @@ class AuthUserCommand {
      */
     private function authenticateUser(string $username, string $password): string {
         // Prepare the SQL statement with placeholders
-        $sql = "SELECT password FROM users WHERE username = :username";
+        $sql = "SELECT * FROM users WHERE username = :username";
 
         // Prepare and execute the statement
 
-        $storedPasswordHash = $this->db->fetch($sql,[':username' => $username]);
-
+        $userData = $this->db->fetch($sql,[':username' => $username]);
+        $storedPasswordHash = $userData['password'];
         // Check if a result was found
-        if ($storedPasswordHash && password_verify($password, $storedPasswordHash['password'])) {
-            return 'Authorization successful: ' . $username; // Successful authorization
+        if ($storedPasswordHash && password_verify($password, $storedPasswordHash)) {
+            return $userData['id']; // Successful authorization
         } else {
             throw new Exception('Invalid username or password'); // Authorization error
         }
