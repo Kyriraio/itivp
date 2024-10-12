@@ -5,7 +5,6 @@ namespace Application\Command;
 use Application\Request;
 use Database\DBConnection as DB;
 use Exception;
-use PDO;
 
 class AuthUserCommand {
     private DB $db;
@@ -17,37 +16,43 @@ class AuthUserCommand {
     /**
      * @throws Exception
      */
-    public function execute(Request\AuthUserRequest $request): string {
-        // Получаем имя пользователя и пароль из запроса
+    public function execute(Request\AuthUserRequest $request): array {
+        // Get the username and password from the request
         $username = $request->getUsername();
         $password = $request->getPassword();
 
-        // Проверяем, что имя пользователя и пароль не пустые
+        // Validate username and password
         if (empty($username) || empty($password)) {
             throw new Exception('Username and password cannot be empty.');
         }
 
-        // Выполняем авторизацию пользователя
+        // Authenticate user and return user data including role
         return $this->authenticateUser($username, $password);
     }
 
     /**
      * @throws Exception
      */
-    private function authenticateUser(string $username, string $password): string {
-        // Prepare the SQL statement with placeholders
-        $sql = "SELECT * FROM users WHERE username = :username";
+    private function authenticateUser(string $username, string $password): array {
+        // Prepare the SQL statement
+        $sql = "SELECT id, password, role_id FROM users WHERE username = :username";
 
-        // Prepare and execute the statement
+        // Fetch user data
+        $userData = $this->db->fetch($sql, [':username' => $username]);
 
-        $userData = $this->db->fetch($sql,[':username' => $username]);
-        $storedPasswordHash = $userData['password'];
         // Check if a result was found
-        if ($storedPasswordHash && password_verify($password, $storedPasswordHash)) {
-            return $userData['id']; // Successful authorization
-        } else {
-            throw new Exception('Invalid username or password'); // Authorization error
-        }
-    }
+        if ($userData) {
+            $storedPasswordHash = $userData['password'];
 
+            // Verify the password
+            if (password_verify($password, $storedPasswordHash)) {
+                return [
+                    'userId' => $userData['id'],      // User ID
+                    'roleId' => $userData['role_id'] // User Role ID
+                ]; // Successful authorization
+            }
+        }
+
+        throw new Exception('Invalid username or password'); // Authorization error
+    }
 }

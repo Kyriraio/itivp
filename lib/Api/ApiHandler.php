@@ -13,14 +13,21 @@ class ApiHandler {
         'RegisterUserCommand' => 'doRegisterUserCommand',
         'AuthUserCommand' => 'doAuthUserCommand',
         'AddEventCommand' => 'doAddEventCommand',
-        'DeleteEventCommand' => 'doDeleteEventCommand',
+        'RemoveEventCommand' => 'doRemoveEventCommand',
         'GetEventsCommand' => 'doGetEventsCommand',
+        'PlaceBetCommand' => 'doPlaceBetCommand',
+        'GetUserInfoCommand' => 'doGetUserInfoCommand',
         ];
 
     #[NoReturn] public function handleRequest(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             exit();
+        }
+
+        // Check if the database is available
+        if (!$this->isDatabaseAvailable()) {
+            $this->sendError('Database is currently unavailable. Please try again later.');
         }
 
         // Получаем команду из параметров запроса
@@ -37,6 +44,22 @@ class ApiHandler {
         }
     }
 
+    private function isDatabaseAvailable(): bool
+    {
+        try {
+            // Attempt to create a new database connection
+            $db = new \Database\DBConnection();
+            // Execute a simple query to check connection
+            $db->fetch("SELECT 1"); // You may adjust this query based on your database logic
+            return true; // Database is available
+        } catch (Exception $e) {
+            return false; // Database is unavailable
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
     #[NoReturn] private function handleCommand(string $commandName): void
     {
         if (!array_key_exists($commandName, $this->commandMap)) {
@@ -49,6 +72,18 @@ class ApiHandler {
         $this->sendSuccess($response);
     }
 
+    /**
+     * @throws Exception
+     */
+    private function validateToken($request): void
+    {
+        if (!$request['userId'])
+        {
+            throw new Exception('Not provided authorization token');
+        }
+
+        $_SESSION['USER_TOKEN'] = $request['userId'];
+    }
     private function getRequestData(): array
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -80,11 +115,48 @@ class ApiHandler {
         exit();
     }
 
+    /**
+     * @throws Exception
+     */
+    private function validatePermission(int $roleId): void
+    {
+        // Get the userId from the session
+        if (!isset($_SESSION['USER_TOKEN'])) {
+            throw new Exception('User is not logged in.'); // Handle unauthenticated access
+        }
+
+        $userId = $_SESSION['USER_TOKEN'];
+
+        // Create a new database connection
+        $db = new \Database\DBConnection();
+
+        // Prepare SQL query to fetch role_id directly from the database
+        $sql = "SELECT role_id FROM users WHERE id = :userId";
+        $params = [':userId' => $userId];
+
+        try {
+            $userInfo = $db->fetch($sql, $params);
+
+            // Check if the user was found and retrieve the role_id
+            if (!$userInfo) {
+                throw new Exception('User not found.');
+            }
+
+            // Check if user's role_id is less than the required roleId
+            if ($userInfo['role_id'] < $roleId) {
+                throw new Exception('You do not have permission to perform this action.');
+            }
+        } catch (Exception $exception) {
+            throw new Exception('Database error: ' . $exception->getMessage());
+        }
+    }
+
+
 
     /**
      * @throws Exception
      */
-    private function doRegisterUserCommand(): string
+    private function doRegisterUserCommand(): array
     {
         $command = new Command\RegisterUserCommand();
         $requestData = $this->getRequestData();
@@ -96,7 +168,20 @@ class ApiHandler {
     /**
      * @throws Exception
      */
-    private function doAuthUserCommand(): string
+    private function doPlaceBetCommand(): string
+    {
+        $command = new Command\PlaceBetCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+        $request = new Request\PlaceBetRequest($requestData['betId'], $requestData['amount'],$requestData['outcome']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doAuthUserCommand(): array
     {
         $command = new Command\AuthUserCommand();
         $requestData = $this->getRequestData();
@@ -115,7 +200,9 @@ class ApiHandler {
         $command = new Command\AddEventCommand();
         $requestData = $this->getRequestData();
 
-        $request = new Request\AddEventRequest($requestData['eventName'], $requestData['eventDate'], $requestData['bettingEndDate']);
+        $this->validateToken($requestData);
+        $this->validatePermission(1);
+        $request = new Request\AddEventRequest($requestData['eventName'], $requestData['eventDate'], $requestData['bettingEndDate'], $requestData['option1'], $requestData['option2']);
         return $command->execute($request);
     }
 
@@ -124,12 +211,27 @@ class ApiHandler {
     /**
      * @throws Exception
      */
-    private function doDeleteEventCommand(): string
+    private function doRemoveEventCommand(): string
     {
-        $command = new Command\DeleteEventCommand();
+        $command = new Command\RemoveEventCommand();
         $requestData = $this->getRequestData();
 
-        $request = new Request\DeleteEventRequest($requestData['eventId']);
+        $this->validateToken($requestData);
+        //$this->validatePermission(2);
+
+        $request = new Request\RemoveEventRequest($requestData['eventId'], $requestData['userId']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doGetUserInfoCommand(): array
+    {
+        $command = new Command\GetUserInfoCommand();
+        $requestData = $this->getRequestData();
+
+        $request = new Request\GetUserInfoRequest($requestData['userId']);
         return $command->execute($request);
     }
 
@@ -144,8 +246,9 @@ class ApiHandler {
         $requestData = $this->getRequestData();
 
         $request = new Request\GetEventsRequest(
-            $requestData['startDate'] ?? null,  // Начальная дата (необязательный параметр)
-            $requestData['endDate'] ?? null     // Конечная дата (необязательный параметр)
+            $requestData['startDate'] ?? null,
+                $requestData['endDate'] ?? null,
+                $requestData['eventSearch'] ?? null
         );
         return $command->execute($request);
     }

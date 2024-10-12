@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Page</title>
+    <link rel="stylesheet" href="account.css">
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="../account/account.html">Account Page</a>
+        <a href="../events/events.html">Events Page</a>
+        <a id="manageAccountsLink" href="../accounts_manage/accounts_manage.html">Manage Accounts</a>
+        <a href="../register/register.html">Register</a> <!-- Link to Registration -->
+        <a href="../auth/auth.html">Login</a> <!-- Link to Authorization -->
+    </nav>
+</header>
+
+<div class="container">
+    <h1>Your Account</h1>
+    <div id="accountDetails">
+        <p><strong>Username:</strong> <span id="username"></span></p>
+<!--
+        <p><strong>Role:</strong> <span id="role"></span></p>
+-->
+        <p><strong>Balance:</strong> <span id="balance"></span></p>
+    </div>
+    <button id="logoutButton" style="background-color:red">logout</button>
+</div>
+
+<footer>
+    <p>&copy; 2024 Bets Ministry. All rights reserved.</p>
+</footer>
+
+<script>
+    // Check if userId exists in local storage
+    if (!localStorage.getItem('userId')) {
+        window.location.href = "../auth/auth.html"; // Redirect to login page
+    }
+
+    // Function to fetch user account details
+    function fetchAccountDetails() {
+        const userId = localStorage.getItem('userId');
+
+        fetch(`http://localhost/BetsMinistry/api/?Command=GetUserInfoCommand`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({userId: userId}) // Send the body data with keys
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Assuming the response contains username, role, and balance
+                if (data.status === 'success') {
+                    document.getElementById('username').innerText = data.response.username;
+                        document.getElementById('balance').innerText = data.response.balance;
+                } else {
+                    alert(data.message); // Show an error message if any
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching account details:', error);
+                alert('An error occurred while fetching account details.');
+            });
+    }
+
+    // Fetch account details on page load
+    fetchAccountDetails();
+
+    // Logout function
+    document.getElementById('logoutButton').addEventListener('click', function () {
+        localStorage.removeItem('userId'); // Remove userId from local storage
+        window.location.href = "../auth/auth.html"; // Redirect to login page
+    });
+
+    const roleId = parseInt(localStorage.getItem('roleId'));
+
+    if (roleId >= 3) {
+        document.getElementById('manageAccountsLink').style.display = 'inline'; // Show Manage Accounts link
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+/* rates.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+#betsTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#betsTable th, #betsTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#betsTable th {
+    background-color: #4CAF50;
+    color: white;
+    text-align: left;
+}
+
+#betModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    display: none;
+    z-index: 10;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Header styles */
+header {
+    background-color: #333;
+    color: white;
+    padding: 10px 0;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+}
+
+nav a {
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+}
+
+nav a:hover {
+    background-color: #555;
+}
+#addBetButton, #deleteBetButton, #manageAccountsLink {
+    display: none;
+}

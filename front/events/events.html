@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Betting Site</title>
+    <link rel="stylesheet" href="events.css">
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="../account/account.html">Account Page</a>
+        <a href="../events/events.html">Events Page</a>
+        <a id="manageAccountsLink" href="../accounts_manage/accounts_manage.html">Manage Accounts</a>
+        <a href="../register/register.html">Register</a> <!-- Link to Registration -->
+        <a href="../auth/auth.html">Login</a> <!-- Link to Authorization -->
+    </nav>
+</header>
+
+<div class="container">
+    <h1>Available Bets</h1>
+    <label for="eventSearchInput">Event title substring</label><input type="text" id="eventSearchInput" placeholder="Find the desired bet..." />
+    <label for="startDate">Event date after</label><input type="date" id="startDate" placeholder="Start Date" />
+    <label for="endDate">Event date before</label><input type="date" id="endDate" placeholder="End Date" />
+
+    <button id="addBetButton" style="display: none;">Add Bet</button>
+
+    <table id="betsTable">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Event Date</th>
+            <th>Bet Closing Date</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td colspan="4">Loading...</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for Editing Bets -->
+<div id="editBetModal" style="display: none;">
+    <h2>Edit Event</h2>
+
+    <label for="editBetName">Event Name:</label>
+    <input type="text" id="editBetName" />
+
+    <label for="editEventDate">Event Date:</label>
+    <input type="date" id="editEventDate" />
+
+    <label for="editBettingEndDate">Betting End Date:</label>
+    <input type="date" id="editBettingEndDate" />
+
+    <!-- Поля для редактирования вариантов голосования -->
+    <label for="editOption1">Voting Option 1:</label>
+    <input type="text" id="editOption1" placeholder="Option 1" />
+
+    <label for="editOption2">Voting Option 2:</label>
+    <input type="text" id="editOption2" placeholder="Option 2" />
+
+    <button id="saveEditBetButton">Save Changes</button>
+    <button id="cancelEditBetButton">Cancel</button>
+</div>
+
+
+<!-- Modal for Adding Bets -->
+<div id="betModal" style="display: none;">
+    <h2 id="modalTitle"></h2>
+
+    <!-- Existing Fields -->
+    <label for="betName">Bet Name:</label>
+    <input type="text" id="betName" maxlength="20" />
+
+    <label for="eventDate">Event Date:</label>
+    <input type="date" id="eventDate" />
+
+    <label for="bettingEndDate">Betting End Date:</label>
+    <input type="date" id="bettingEndDate" />
+
+    <!-- New Inputs for Voting Options -->
+    <label for="option1">Voting Option 1:</label>
+    <input type="text" id="option1" placeholder="Option 1" maxlength="20" />
+
+    <label for="option2">Voting Option 2:</label>
+    <input type="text" id="option2" placeholder="Option 2" maxlength="20" />
+
+    <button id="saveBetButton">Save Bet</button>
+    <button id="cancelButton">Cancel</button>
+</div>
+
+
+<!-- Modal for Placing a Bet -->
+<div id="placeBetModal" style="display: none;">
+    <h2>Place Your Bet</h2>
+    <label for="betAmount">Amount:</label>
+    <input type="number" id="betAmount" placeholder="Enter your amount" />
+
+    <label for="betOutcome">Select Outcome:</label>
+    <select id="betOutcome">
+        <!-- Options will be dynamically added here -->
+    </select>
+
+    <button id="placeBetButton">Place Bet</button>
+    <button id="closeBetModalButton">Cancel</button>
+</div>
+
+<footer>
+    <p>&copy; 2024 Bets Ministry. All rights reserved.</p>
+</footer>
+
+<script src="events.js"></script>
+<script>
+    // Check if userId exists in local storage
+    if (!localStorage.getItem('userId')) {
+        window.location.href = "../auth/auth.html"; // Redirect to login page
+    } else {
+        // Get the role ID from local storage
+        const roleId = parseInt(localStorage.getItem('roleId'));
+
+        // Show or hide buttons and links based on the user's role
+        if (roleId >= 2) {
+            document.getElementById('addBetButton').style.display = 'block'; // Show Add Bet button
+        }
+
+        if (roleId >= 3) {
+            document.getElementById('manageAccountsLink').style.display = 'inline'; // Show Manage Accounts link
+        }
+    }
+</script>
+</body>
+</html>
