@@ -30,6 +30,11 @@ class RemoveUserCommand {
             throw new Exception('Invalid user ID.');
         }
 
+        // Prevent user from removing themselves
+        if ($userIdToRemove === $_SESSION['USER_TOKEN']) {
+            throw new Exception('You cannot remove yourself.');
+        }
+
         // Remove the user from the database
         try {
             $this->removeUser($userIdToRemove);

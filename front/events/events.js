@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td>${bet.betting_end_date}</td>
                 <td>
                     ${roleId >= 2 ? `<button class="deleteBetButton" data-id="${bet.id}">Delete</button>` : ''}
-                    <button class="placeBetButton" data-id="${bet.id}" data-outcomes='${JSON.stringify(bet.outcomes)}'>Bet</button>
+                    ${roleId === 1 ? `<button class="placeBetButton" data-id="${bet.id}" data-outcomes='${JSON.stringify(bet.outcomes)}'>Bet</button>` : ''}
                 </td>
             `;
                 betsTableBody.appendChild(row);
