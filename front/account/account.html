@@ -22,9 +22,7 @@
     <h1>Your Account</h1>
     <div id="accountDetails">
         <p><strong>Username:</strong> <span id="username"></span></p>
-<!--
         <p><strong>Role:</strong> <span id="role"></span></p>
--->
         <p><strong>Balance:</strong> <span id="balance"></span></p>
     </div>
     <button id="logoutButton" style="background-color:red">logout</button>
@@ -56,6 +54,7 @@
                 // Assuming the response contains username, role, and balance
                 if (data.status === 'success') {
                     document.getElementById('username').innerText = data.response.username;
+                    document.getElementById('role').innerText = data.response.role;
                         document.getElementById('balance').innerText = data.response.balance;
                 } else {
                     alert(data.message); // Show an error message if any

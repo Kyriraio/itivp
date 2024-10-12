@@ -72,7 +72,7 @@ class RegisterUserCommand {
                 ':username' => $username,
                 ':password' => $hashedPassword,
                 ':balance' => 1000,
-                ':role_id' => 2
+                ':role_id' => 1
             ]);
 
             return $this->db->lastInsertId();

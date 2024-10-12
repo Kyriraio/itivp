@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link rel="stylesheet" href="accounts_manage.css">
+
+</head>
+<body>
+<header>
+    <nav>
+        <a href="../account/account.html">Account Page</a>
+        <a href="../events/events.html">Events Page</a>
+        <a id="manageAccountsLink" href="../accounts_manage/accounts_manage.html">Manage Accounts</a>
+        <a href="../register/register.html">Register</a> <!-- Link to Registration -->
+        <a href="../auth/auth.html">Login</a> <!-- Link to Authorization -->
+    </nav>
+</header>
+<h1>User Management</h1>
+<table id="usersTable">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody id="usersTableBody">
+    <tr><td colspan="3">Loading...</td></tr>
+    </tbody>
+</table>
+
+<script>
+    function fetchUsers() {
+        const usersTableBody = document.getElementById('usersTableBody');
+        usersTableBody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
+
+        fetch('http://localhost/BetsMinistry/api/?Command=GetUsersCommand')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    renderUsers(data.response);
+                } else {
+                    throw new Error(data.message || 'Failed to load users');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+                usersTableBody.innerHTML = `<tr><td colspan="3">Error loading data: ${error.message}</td></tr>`;
+            });
+    }
+
+    function renderUsers(users) {
+        const usersTableBody = document.getElementById('usersTableBody');
+        usersTableBody.innerHTML = '';
+
+        if (users.length === 0) {
+            usersTableBody.innerHTML = '<tr><td colspan="3">No users available</td></tr>';
+            return;
+        }
+
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.role_id}</td>
+                    <td>
+                        <button class="deleteUserButton" data-id="${user.id}">Ban</button>
+                    </td>
+                `;
+            usersTableBody.appendChild(row);
+        });
+
+        document.querySelectorAll('.deleteUserButton').forEach(button => {
+            button.addEventListener('click', deleteUser);
+        });
+    }
+
+    function deleteUser(event) {
+        const deleteUserId = event.target.dataset.id;
+        const userId = parseInt(localStorage.getItem('userId'));
+
+        if (confirm('Are you sure you want to ban this user?')) {
+            fetch(`http://localhost/BetsMinistry/api/?Command=RemoveUserCommand`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deleteUserId: deleteUserId,userId:userId  })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('User banned successfully.');
+                        fetchUsers(); // Refresh the user list
+                    } else {
+                        throw new Error(data.message || 'Failed to ban user');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error banning user:', error);
+                    alert('Error banning user: ' + error.message);
+                });
+        }
+    }
+    const roleId = parseInt(localStorage.getItem('roleId'));
+
+    if (roleId >= 3) {
+        document.getElementById('manageAccountsLink').style.display = 'inline'; // Show Manage Accounts link
+    }
+
+    fetchUsers();
+
+
+</script>
+</body>
+</html>

@@ -19,10 +19,9 @@ class RemoveUserCommand {
     public function execute(Request\RemoveUserRequest $request): string {
         // Get user ID to be removed and the initiator ID
         $userIdToRemove = $request->getUserId();
-        $initiatorId = $request->getInitiatorId();
 
         // Validate that the initiator has the correct role
-        if (!$this->isAdmin($initiatorId)) {
+        if (!$this->isAdmin($_SESSION['USER_TOKEN'])) {
             throw new Exception('Only users with admin role can remove other users.');
         }
 
@@ -42,17 +41,15 @@ class RemoveUserCommand {
     }
 
     private function isAdmin(int $userId): bool {
-        // Fetch the user's role based on user ID
-        $sql = "SELECT r.role_name FROM users u
-                JOIN user_roles ur ON u.id = ur.user_id
-                JOIN roles r ON ur.role_id = r.id
-                WHERE u.id = :userId";
+        // Получаем роль пользователя на основе его ID
+        $sql = "SELECT role_id FROM users WHERE id = :userId";
 
-        $result = $this->db->execute($sql, [':userId' => $userId]);
+        $result = $this->db->fetch($sql, [':userId' => $userId]);
 
-        // Check if the user has the admin role
-        return !empty($result) && ($result[0]['role_name'] === 'admin');
+        // Проверка на наличие прав администратора или модератора
+        return !empty($result) && ($result['role_id'] === 3); // Assuming role_id 3 is for 'admin'
     }
+
 
     private function removeUser(int $userId): void {
         $sql = "DELETE FROM users WHERE id = :userId";

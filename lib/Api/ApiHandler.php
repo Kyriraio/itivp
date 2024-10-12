@@ -14,9 +14,11 @@ class ApiHandler {
         'AuthUserCommand' => 'doAuthUserCommand',
         'AddEventCommand' => 'doAddEventCommand',
         'RemoveEventCommand' => 'doRemoveEventCommand',
+        'RemoveUserCommand' => 'doRemoveUserCommand',
         'GetEventsCommand' => 'doGetEventsCommand',
         'PlaceBetCommand' => 'doPlaceBetCommand',
         'GetUserInfoCommand' => 'doGetUserInfoCommand',
+        'GetUsersCommand' => 'doGetUsersCommand',
         ];
 
     #[NoReturn] public function handleRequest(): void
@@ -118,7 +120,7 @@ class ApiHandler {
     /**
      * @throws Exception
      */
-    private function validatePermission(int $roleId): void
+    private function validatePermission(array $allowedRoleIds): void
     {
         // Get the userId from the session
         if (!isset($_SESSION['USER_TOKEN'])) {
@@ -142,14 +144,15 @@ class ApiHandler {
                 throw new Exception('User not found.');
             }
 
-            // Check if user's role_id is less than the required roleId
-            if ($userInfo['role_id'] < $roleId) {
+            // Check if user's role_id is in the allowed roles array
+            if (!in_array($userInfo['role_id'], $allowedRoleIds, true)) {
                 throw new Exception('You do not have permission to perform this action.');
             }
         } catch (Exception $exception) {
             throw new Exception('Database error: ' . $exception->getMessage());
         }
     }
+
 
 
 
@@ -174,6 +177,8 @@ class ApiHandler {
         $requestData = $this->getRequestData();
 
         $this->validateToken($requestData);
+        $this->validatePermission([1]);
+
         $request = new Request\PlaceBetRequest($requestData['betId'], $requestData['amount'],$requestData['outcome']);
         return $command->execute($request);
     }
@@ -201,9 +206,16 @@ class ApiHandler {
         $requestData = $this->getRequestData();
 
         $this->validateToken($requestData);
-        $this->validatePermission(1);
+        $this->validatePermission([2,3]);
         $request = new Request\AddEventRequest($requestData['eventName'], $requestData['eventDate'], $requestData['bettingEndDate'], $requestData['option1'], $requestData['option2']);
         return $command->execute($request);
+    }
+
+    private function doGetUsersCommand(): array
+    {
+        $command = new Command\GetUsersCommand();
+
+        return $command->execute();
     }
 
     // Удаление события
@@ -217,9 +229,24 @@ class ApiHandler {
         $requestData = $this->getRequestData();
 
         $this->validateToken($requestData);
-        //$this->validatePermission(2);
+        $this->validatePermission([2,3]);
 
         $request = new Request\RemoveEventRequest($requestData['eventId'], $requestData['userId']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doRemoveUserCommand(): string
+    {
+        $command = new Command\RemoveUserCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+        $this->validatePermission([3]);
+
+        $request = new Request\RemoveUserRequest($requestData['deleteUserId']);
         return $command->execute($request);
     }
 
