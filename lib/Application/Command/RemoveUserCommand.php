@@ -32,7 +32,12 @@ class RemoveUserCommand {
 
         // Prevent user from removing themselves
         if ($userIdToRemove === $_SESSION['USER_TOKEN']) {
-            throw new Exception('You cannot remove yourself.');
+            throw new Exception('You cannot ban yourself.');
+        }
+
+        // Prevent removal of another admin
+        if ($this->isAdmin($userIdToRemove)) {
+            throw new Exception('You cannot ban another admin.');
         }
 
         // Remove the user from the database
@@ -51,10 +56,9 @@ class RemoveUserCommand {
 
         $result = $this->db->fetch($sql, [':userId' => $userId]);
 
-        // Проверка на наличие прав администратора или модератора
+        // Проверка на наличие прав администратора
         return !empty($result) && ($result['role_id'] === 3); // Assuming role_id 3 is for 'admin'
     }
-
 
     private function removeUser(int $userId): void {
         $sql = "DELETE FROM users WHERE id = :userId";
