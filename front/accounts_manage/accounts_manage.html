@@ -54,7 +54,50 @@
     </table>
 </div>
 
+<div id="updateCoefficients">
+    <h2>Update Coefficients</h2>
+    <form id="updateCoefficientForm">
+        <label for="coefficientCode">Coefficient Code:</label>
+        <select id="coefficientCode">
+            <option value="total_bets">Total Bets</option>
+            <option value="total_bets_sum">Total Bets Sum</option>
+        </select>
+        <label for="coefficientValue">New Value:</label>
+        <input type="number" id="coefficientValue" step="0.01" required>
+        <button type="submit">Update Coefficient</button>
+    </form>
+</div>
+
 <script>
+
+    document.getElementById('updateCoefficientForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const code = document.getElementById('coefficientCode').value;
+        const value = parseFloat(document.getElementById('coefficientValue').value);
+        const userId = parseInt(localStorage.getItem('userId'));
+
+        fetch('http://localhost/BetsMinistry/api/?Command=UpdateCoefficientCommand', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({userId:userId, code: code, value: value })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Coefficient updated successfully.');
+                } else {
+                    throw new Error(data.message || 'Failed to update coefficient');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating coefficient:', error);
+                alert('Error: ' + error.message);
+            });
+    });
+
     // Fetch and render users
     function fetchUsers() {
         const usersTableBody = document.getElementById('usersTableBody');

@@ -23,6 +23,7 @@ class ApiHandler {
         'RequestWithdrawalCommand' => 'doRequestWithdrawalCommand',
         'GetWithdrawalRequestsCommand' => 'doGetWithdrawalRequestsCommand',
         'ProcessWithdrawalRequestCommand' => 'doProcessWithdrawalRequestCommand',
+        'UpdateCoefficientCommand' => 'doUpdateCoefficientCommand',
         ];
 
     #[NoReturn] public function handleRequest(): void
@@ -169,6 +170,21 @@ class ApiHandler {
         $requestData = $this->getRequestData();
 
         $request = new Request\RegisterUserRequest($requestData['username'], $requestData['password']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doUpdateCoefficientCommand(): string
+    {
+        $command = new Command\UpdateCoefficientCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+        $this->validatePermission([3]);
+
+        $request = new Request\UpdateCoefficientRequest($requestData['code'], $requestData['value']);
         return $command->execute($request);
     }
 
