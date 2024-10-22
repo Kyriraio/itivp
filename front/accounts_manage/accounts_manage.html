@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
     <link rel="stylesheet" href="accounts_manage.css">
-
 </head>
 <body>
 <header>
@@ -13,25 +12,50 @@
         <a href="../account/account.html">Account Page</a>
         <a href="../events/events.html">Events Page</a>
         <a id="manageAccountsLink" href="../accounts_manage/accounts_manage.html">Manage Accounts</a>
-        <a href="../register/register.html">Register</a> <!-- Link to Registration -->
-        <a href="../auth/auth.html">Login</a> <!-- Link to Authorization -->
+        <a href="../history/history.html">Bets History</a>
+        <a href="../register/register.html">Register</a>
+        <a href="../auth/auth.html">Login</a>
     </nav>
 </header>
 <h1>User Management</h1>
-<table id="usersTable">
-    <thead>
-    <tr>
-        <th>Username</th>
-        <th>Role</th>
-        <th>Action</th>
-    </tr>
-    </thead>
-    <tbody id="usersTableBody">
-    <tr><td colspan="3">Loading...</td></tr>
-    </tbody>
-</table>
+
+<!-- Section for managing users -->
+<div id="usersManagement">
+    <h2>Users List</h2>
+    <table id="usersTable">
+        <thead>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="usersTableBody">
+        <tr><td colspan="3">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Section for managing withdrawal requests -->
+<div id="withdrawalRequests">
+    <h2>Withdrawal Requests</h2>
+    <table id="withdrawalRequestsTable">
+        <thead>
+        <tr>
+            <th>Username</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="withdrawalRequestsTableBody">
+        <tr><td colspan="4">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
 
 <script>
+    // Fetch and render users
     function fetchUsers() {
         const usersTableBody = document.getElementById('usersTableBody');
         usersTableBody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
@@ -63,15 +87,16 @@
         users.forEach(user => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                    <td>${user.username}</td>
-                    <td>${user.role_id}</td>
-                    <td>
-                        <button class="deleteUserButton" data-id="${user.id}">Ban</button>
-                    </td>
-                `;
+                <td>${user.username}</td>
+                <td>${user.role_id}</td>
+                <td>
+                    <button class="deleteUserButton" data-id="${user.id}">Ban</button>
+                </td>
+            `;
             usersTableBody.appendChild(row);
         });
 
+        // Add event listener for ban buttons
         document.querySelectorAll('.deleteUserButton').forEach(button => {
             button.addEventListener('click', deleteUser);
         });
@@ -82,10 +107,10 @@
         const userId = parseInt(localStorage.getItem('userId'));
 
         if (confirm('Are you sure you want to ban this user?')) {
-            fetch(`http://localhost/BetsMinistry/api/?Command=RemoveUserCommand`, {
+            fetch('http://localhost/BetsMinistry/api/?Command=RemoveUserCommand', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deleteUserId: deleteUserId,userId:userId  })
+                body: JSON.stringify({ deleteUserId: deleteUserId, userId: userId })
             })
                 .then(response => response.json())
                 .then(data => {
@@ -102,15 +127,106 @@
                 });
         }
     }
-    const roleId = parseInt(localStorage.getItem('roleId'));
 
-    if (roleId >= 3) {
-        document.getElementById('manageAccountsLink').style.display = 'inline'; // Show Manage Accounts link
+    // Fetch and render withdrawal requests
+    function fetchWithdrawalRequests() {
+        const withdrawalRequestsTableBody = document.getElementById('withdrawalRequestsTableBody');
+        withdrawalRequestsTableBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+
+        fetch('http://localhost/BetsMinistry/api/?Command=GetWithdrawalRequestsCommand')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    renderWithdrawalRequests(data.response);
+                } else {
+                    throw new Error(data.message || 'Failed to load withdrawal requests');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching withdrawal requests:', error);
+                withdrawalRequestsTableBody.innerHTML = `<tr><td colspan="4">Error loading data: ${error.message}</td></tr>`;
+            });
     }
 
+    function renderWithdrawalRequests(requests) {
+        const withdrawalRequestsTableBody = document.getElementById('withdrawalRequestsTableBody');
+        withdrawalRequestsTableBody.innerHTML = '';
+
+        if (requests.length === 0) {
+            withdrawalRequestsTableBody.innerHTML = '<tr><td colspan="4">No withdrawal requests available</td></tr>';
+            return;
+        }
+
+        requests.forEach(request => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${request.username}</td>
+                <td>${request.amount}</td>
+                <td>${request.status}</td>
+                <td>
+                    ${request.status === 'pending' ? `
+                        <button class="approveRequestButton" data-id="${request.id}">Approve</button>
+                        <button class="rejectRequestButton" data-id="${request.id}">Reject</button>
+                    ` : 'No actions available'}
+                </td>
+            `;
+            withdrawalRequestsTableBody.appendChild(row);
+        });
+
+        // Add event listeners for approve and reject buttons
+        document.querySelectorAll('.approveRequestButton').forEach(button => {
+            button.addEventListener('click', approveRequest);
+        });
+
+        document.querySelectorAll('.rejectRequestButton').forEach(button => {
+            button.addEventListener('click', rejectRequest);
+        });
+    }
+
+    function processWithdrawal(event, action) {
+        const requestId = event.target.dataset.id;
+        const userId = parseInt(localStorage.getItem('userId'));
+
+        const confirmMessage = action === 'approve'
+            ? 'Are you sure you want to approve this withdrawal request?'
+            : 'Are you sure you want to reject this withdrawal request?';
+
+        if (confirm(confirmMessage)) {
+            fetch(`http://localhost/BetsMinistry/api/?Command=ProcessWithdrawalRequestCommand`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId: requestId, userId: userId, action: action })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const successMessage = action === 'approve'
+                            ? 'Withdrawal request approved successfully.'
+                            : 'Withdrawal request rejected successfully.';
+                        alert(successMessage);
+                        fetchWithdrawalRequests(); // Refresh the request list
+                    } else {
+                        throw new Error(data.message || `Failed to ${action} withdrawal request`);
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error ${action}ing withdrawal request:`, error);
+                    alert(`Error: ${error.message}`);
+                });
+        }
+    }
+
+    function approveRequest(event) {
+        processWithdrawal(event, 'approve');
+    }
+
+    function rejectRequest(event) {
+        processWithdrawal(event, 'reject');
+    }
+
+    // Fetch users and withdrawal requests on page load
     fetchUsers();
-
-
+    fetchWithdrawalRequests();
 </script>
 </body>
 </html>

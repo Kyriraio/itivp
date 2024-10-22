@@ -29,16 +29,18 @@ class GetEventsCommand
     }
 
     private function getEvents(?string $startDate, ?string $endDate, ?string $eventSearch): array {
-        $sql = "SELECT e.*, o.id as outcome_id, o.outcome
+        $sql = "SELECT e.*, o.id as outcome_id, o.outcome, 
+                       COUNT(b.id) as bet_count
                 FROM events e
-                LEFT JOIN event_outcomes o ON e.id = o.event_id"; // Added a placeholder to simplify appending conditions
+                LEFT JOIN event_outcomes o ON e.id = o.event_id
+                LEFT JOIN bets b ON e.id = b.event_id"; // Присоединяем таблицу ставок для подсчета количества
 
         $params = [];
 
         if (!empty($startDate) || !empty($endDate) || !empty($eventSearch)) {
-            $sql .= " WHERE 1=1"; // A trick to make appending conditions easier
+            $sql .= " WHERE 1=1"; // Упрощение для добавления условий
         }
-        
+
         if (!empty($startDate)) {
             $sql .= " AND e.event_date >= :start_date";
             $params[':start_date'] = $startDate;
@@ -54,11 +56,12 @@ class GetEventsCommand
             $params[':event_search'] = '%' . $eventSearch . '%';
         }
 
-        $sql .= " ORDER BY e.event_date DESC";
+        $sql .= " GROUP BY e.id, o.id
+                  ORDER BY bet_count DESC, e.event_date DESC"; // Сортировка по количеству ставок и дате события
 
         $events = $this->db->fetchAll($sql, $params);
 
-        // Group outcomes under each event
+        // Группировка исходов по каждому событию
         $groupedEvents = [];
         foreach ($events as $event) {
             $eventId = $event['id'];

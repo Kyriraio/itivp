@@ -19,6 +19,10 @@ class ApiHandler {
         'PlaceBetCommand' => 'doPlaceBetCommand',
         'GetUserInfoCommand' => 'doGetUserInfoCommand',
         'GetUsersCommand' => 'doGetUsersCommand',
+        'GetBetsHistoryCommand' => 'doGetBetsHistoryCommand',
+        'RequestWithdrawalCommand' => 'doRequestWithdrawalCommand',
+        'GetWithdrawalRequestsCommand' => 'doGetWithdrawalRequestsCommand',
+        'ProcessWithdrawalRequestCommand' => 'doProcessWithdrawalRequestCommand',
         ];
 
     #[NoReturn] public function handleRequest(): void
@@ -171,6 +175,18 @@ class ApiHandler {
     /**
      * @throws Exception
      */
+    private function doGetBetsHistoryCommand(): array
+    {
+        $command = new Command\GetBetsHistoryCommand();
+        $requestData = $this->getRequestData();
+
+        $request = new Request\GetBetsHistoryRequest($requestData['userId']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
     private function doPlaceBetCommand(): string
     {
         $command = new Command\PlaceBetCommand();
@@ -211,9 +227,28 @@ class ApiHandler {
         return $command->execute($request);
     }
 
+    /**
+     * @throws Exception
+     */
+    private function doRequestWithdrawalCommand(): string
+    {
+        $command = new Command\RequestWithdrawalCommand();
+        $requestData = $this->getRequestData();
+
+        $request = new Request\RequestWithdrawalRequest($requestData['userId'], $requestData['amount']);
+        return $command->execute($request);
+    }
+
     private function doGetUsersCommand(): array
     {
         $command = new Command\GetUsersCommand();
+
+        return $command->execute();
+    }
+
+    private function doGetWithdrawalRequestsCommand(): array
+    {
+        $command = new Command\GetWithdrawalRequestsCommand();
 
         return $command->execute();
     }
@@ -247,6 +282,21 @@ class ApiHandler {
         $this->validatePermission([3]);
 
         $request = new Request\RemoveUserRequest($requestData['deleteUserId']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doProcessWithdrawalRequestCommand(): string
+    {
+        $command = new Command\ProcessWithdrawalRequestCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+        $this->validatePermission([3]);
+
+        $request = new Request\ProcessWithdrawalRequestRequest($requestData['requestId'],$requestData['userId'],$requestData['action']);
         return $command->execute($request);
     }
 

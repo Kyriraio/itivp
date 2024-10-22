@@ -99,17 +99,3 @@ nav a:hover {
 #manageAccountsLink {
     display: none;
 }
-
-/* Add these styles to your CSS file */
-.deleteUserButton, .rejectRequestButton {
-    background-color: red;  /* Set background color to red */
-    color: white;           /* Set text color to white for better contrast */
-    border: none;           /* Remove borders */
-    padding: 10px;          /* Add some padding */
-    cursor: pointer;        /* Change cursor to pointer on hover */
-    border-radius: 5px;     /* Rounded corners */
-}
-
-.deleteUserButton:hover, .rejectRequestButton:hover {
-    background-color: darkred; /* Darker red on hover */
-}

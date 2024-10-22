@@ -13,8 +13,9 @@
         <a href="../account/account.html">Account Page</a>
         <a href="../events/events.html">Events Page</a>
         <a id="manageAccountsLink" href="../accounts_manage/accounts_manage.html">Manage Accounts</a>
-        <a href="../register/register.html">Register</a> <!-- Link to Registration -->
-        <a href="../auth/auth.html">Login</a> <!-- Link to Authorization -->
+        <a href="../history/history.html">Bets History</a>
+        <a href="../register/register.html">Register</a>
+        <a href="../auth/auth.html">Login</a>
     </nav>
 </header>
 
@@ -25,7 +26,14 @@
         <p><strong>Role:</strong> <span id="role"></span></p>
         <p><strong>Balance:</strong> <span id="balance"></span></p>
     </div>
-    <button id="logoutButton" style="background-color:red">logout</button>
+    <button id="logoutButton" style="background-color:red">Logout</button>
+
+    <!-- New section for requesting a withdrawal -->
+    <div id="withdrawRequestSection">
+        <h2>Request Withdrawal</h2>
+        <input type="number" id="withdrawAmount" placeholder="Enter amount to withdraw" min="0" step="0.01">
+        <button id="requestWithdrawButton">Request Withdrawal</button>
+    </div>
 </div>
 
 <footer>
@@ -55,7 +63,7 @@
                 if (data.status === 'success') {
                     document.getElementById('username').innerText = data.response.username;
                     document.getElementById('role').innerText = data.response.role;
-                        document.getElementById('balance').innerText = data.response.balance;
+                    document.getElementById('balance').innerText = data.response.balance;
                 } else {
                     alert(data.message); // Show an error message if any
                 }
@@ -73,6 +81,38 @@
     document.getElementById('logoutButton').addEventListener('click', function () {
         localStorage.removeItem('userId'); // Remove userId from local storage
         window.location.href = "../auth/auth.html"; // Redirect to login page
+    });
+
+    // Function to handle withdrawal request
+    document.getElementById('requestWithdrawButton').addEventListener('click', function () {
+        const userId = localStorage.getItem('userId');
+        const amount = parseFloat(document.getElementById('withdrawAmount').value);
+
+        if (isNaN(amount) || amount <= 0) {
+            alert('Please enter a valid withdrawal amount.');
+            return;
+        }
+
+        fetch(`http://localhost/BetsMinistry/api/?Command=RequestWithdrawalCommand`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({userId: userId, amount: amount})
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Withdrawal request submitted successfully. Waiting for approval.');
+                    document.getElementById('withdrawAmount').value = ''; // Clear input
+                } else {
+                    alert(data.message || 'Failed to submit withdrawal request.');
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting withdrawal request:', error);
+                alert('An error occurred while submitting your request.');
+            });
     });
 
     const roleId = parseInt(localStorage.getItem('roleId'));
