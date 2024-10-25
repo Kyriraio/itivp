@@ -94,21 +94,19 @@ class ApiHandler {
     private function getRequestData(): array
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Считываем тело запроса (POST)
-            $data = json_decode(file_get_contents('php://input'), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->sendError('Invalid JSON data');
-            }
+
+            $data = $_POST;
+
+            // Handle the case where no POST data exists
+            return $data ?? [];
         } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // Обработка GET-запросов
-            $data = $_GET;
-        }
-        else {
+            // Handle GET requests
+            return $_GET;
+        } else {
             $this->sendError("This request method is not supported");
         }
-
-        return $data ?? [];
     }
+
 
     #[NoReturn] private function sendError(string $message): void
     {
@@ -239,7 +237,25 @@ class ApiHandler {
 
         $this->validateToken($requestData);
         $this->validatePermission([2,3]);
-        $request = new Request\AddEventRequest($requestData['eventName'], $requestData['eventDate'], $requestData['bettingEndDate'], $requestData['option1'], $requestData['option2']);
+
+        // Get the image from $_FILES and convert to base64
+        if (isset($_FILES['eventImage'])) {
+            $eventImageData = file_get_contents($_FILES['eventImage']['tmp_name']);
+            $eventImageBase64 = base64_encode($eventImageData);
+        } else {
+            throw new Exception('Event image not provided.');
+        }
+
+        // Create the request with base64 image
+        $request = new Request\AddEventRequest(
+            $requestData['eventName'],
+            $requestData['eventDate'],
+            $requestData['bettingEndDate'],
+            $requestData['option1'],
+            $requestData['option2'],
+            $eventImageBase64 // Pass the base64 encoded image
+        );
+
         return $command->execute($request);
     }
 

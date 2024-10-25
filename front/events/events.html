@@ -30,6 +30,7 @@
     <table id="betsTable">
         <thead>
         <tr>
+            <th>Image</th>
             <th>Name</th>
             <th>Event Date</th>
             <th>Bet Closing Date</th>
@@ -38,7 +39,7 @@
         </thead>
         <tbody>
         <tr>
-            <td colspan="4">Loading...</td>
+            <td colspan="5">Loading...</td>
         </tr>
         </tbody>
     </table>
@@ -90,9 +91,14 @@
     <label for="option2">Voting Option 2:</label>
     <input type="text" id="option2" placeholder="Option 2" maxlength="20" />
 
+    <!-- New Input for Image Upload -->
+    <label for="eventImage">Event Image:</label>
+    <input type="file" id="eventImage" accept="image/*" />
+
     <button id="saveBetButton">Save Bet</button>
     <button id="cancelButton">Cancel</button>
 </div>
+
 
 
 <!-- Modal for Placing a Bet -->

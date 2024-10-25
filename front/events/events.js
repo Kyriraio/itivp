@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentBet = null;
 
     function fetchBets(startDate = '', endDate = '', eventSearch = '') {
-        betsTableBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+        betsTableBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
 
         fetch(`http://localhost/BetsMinistry/api/?Command=GetEventsCommand&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&eventSearch=${encodeURIComponent(eventSearch)}`)
             .then(response => response.json())
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 alert(error);
-                betsTableBody.innerHTML = '<tr><td colspan="4">Error loading data.</td></tr>';
+                betsTableBody.innerHTML = '<tr><td colspan="5">Error loading data.</td></tr>';
             });
     }
 
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
             betsTableBody.innerHTML = ''; // Clear existing table body
 
             if (bets.length === 0) {
-                betsTableBody.innerHTML = '<tr><td colspan="4">No data available</td></tr>';
+                betsTableBody.innerHTML = '<tr><td colspan="6">No data available</td></tr>';
                 return;
             }
 
@@ -44,7 +44,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             bets.forEach(bet => {
                 const row = document.createElement('tr');
+
+                // Convert BLOB to Base64 (assuming backend sends it as Base64 string)
+                let imageUrl = bet.event_image ? `data:image/png;base64,${bet.event_image}` : '';
+
                 row.innerHTML = `
+                <td><img src="${imageUrl}" alt="Event Image" width="50" height="50"></td>
                 <td>${bet.event_name}</td>
                 <td>${bet.event_date}</td>
                 <td>${bet.betting_end_date}</td>
@@ -53,13 +58,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${roleId === 1 ? `<button class="placeBetButton" data-id="${bet.id}" data-outcomes='${JSON.stringify(bet.outcomes)}'>Bet</button>` : ''}
                 </td>
             `;
+
                 betsTableBody.appendChild(row);
             });
 
-            // Add event listeners for the buttons
-            document.querySelectorAll('.editBetButton').forEach(button => {
-                button.addEventListener('click', openEditBetModal); // Edit bet listener
-            });
+
             document.querySelectorAll('.deleteBetButton').forEach(button => {
                 button.addEventListener('click', deleteEvent); // Delete bet listener
             });
@@ -71,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('An error occurred while rendering the bets. Please try again later.'); // Notify user
         }
     }
+
 
 
     function openPlaceBetModal(event) {
@@ -155,19 +159,23 @@ document.addEventListener('DOMContentLoaded', function () {
     function saveBet() {
         const userId = localStorage.getItem('userId'); // Get userId from local storage
 
-        const newBet = {
-            eventName: document.getElementById('betName').value,
-            eventDate: document.getElementById('eventDate').value,
-            bettingEndDate: document.getElementById('bettingEndDate').value,
-            option1: document.getElementById('option1').value,
-            option2: document.getElementById('option2').value,
-            userId: userId // Include userId in the body
-        };
+        const formData = new FormData();
+        formData.append('eventName', document.getElementById('betName').value);
+        formData.append('eventDate', document.getElementById('eventDate').value);
+        formData.append('bettingEndDate', document.getElementById('bettingEndDate').value);
+        formData.append('option1', document.getElementById('option1').value);
+        formData.append('option2', document.getElementById('option2').value);
+        formData.append('userId', userId); // Include userId in the body
+
+        // Append the image file if it exists
+        const eventImage = document.getElementById('eventImage').files[0];
+        if (eventImage) {
+            formData.append('eventImage', eventImage);
+        }
 
         fetch(`http://localhost/BetsMinistry/api/?Command=AddEventCommand`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newBet)
+            body: formData
         })
             .then(response => {
                 // Check if the response is okay (status in the range 200-299)

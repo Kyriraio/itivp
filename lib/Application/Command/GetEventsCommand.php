@@ -30,17 +30,17 @@ class GetEventsCommand
 
     private function getEvents(?string $startDate, ?string $endDate, ?string $eventSearch): array {
         $sql = "SELECT e.*, 
-                       o.id as outcome_id, 
-                       o.outcome, 
-                       COUNT(b.id) as bet_count,
-                       SUM(b.bet_amount) as total_bet_amount
-                FROM events e
-                LEFT JOIN event_outcomes o ON e.id = o.event_id
-                LEFT JOIN bets b ON e.id = b.event_id"; // Join to get the number of bets and the total bet amount
+                   o.id as outcome_id, 
+                   o.outcome, 
+                   COUNT(b.id) as bet_count,
+                   SUM(b.bet_amount) as total_bet_amount,
+                   e.event_image  -- Select the event image blob
+            FROM events e
+            LEFT JOIN event_outcomes o ON e.id = o.event_id
+            LEFT JOIN bets b ON e.id = b.event_id";
 
         $params = [];
 
-        // Build SQL query with optional filters
         if (!empty($startDate) || !empty($endDate) || !empty($eventSearch)) {
             $sql .= " WHERE 1=1"; // Simplify for adding conditions
         }
@@ -60,12 +60,10 @@ class GetEventsCommand
             $params[':event_search'] = '%' . $eventSearch . '%';
         }
 
-        $sql .= " GROUP BY e.id, o.id"; // Group by event and outcome
+        $sql .= " GROUP BY e.id, o.id";
 
-        // Retrieve coefficients from the database
         $coefficients = $this->getCoefficients();
 
-        // Prepare the custom sorting and result
         $events = $this->db->fetchAll($sql, $params);
         $groupedEvents = [];
 
@@ -73,19 +71,14 @@ class GetEventsCommand
             $eventId = $event['id'];
             $betCount = (int) $event['bet_count'];
             $totalBetAmount = (float) $event['total_bet_amount'];
-
-            // Calculate the custom value using a1 * x1 + a2 * x2
             $customValue = 0;
 
             if ($coefficients) {
                 $a1 = $coefficients['total_bets'];
                 $a2 = $coefficients['total_bets_sum'];
-
-                // Apply the formula a1 * x1 + a2 * x2
                 $customValue = ($a1 * $betCount) + ($a2 * $totalBetAmount);
             }
 
-            // Initialize event data if not already set
             if (!isset($groupedEvents[$eventId])) {
                 $groupedEvents[$eventId] = [
                     'id' => $event['id'],
@@ -93,13 +86,13 @@ class GetEventsCommand
                     'event_date' => $event['event_date'],
                     'betting_end_date' => $event['betting_end_date'],
                     'outcomes' => [],
-                    'bet_count' => $betCount, // Add bet count to output
-                    'total_bet_amount' => $totalBetAmount, // Add total bet amount to output
-                    'custom_value' => $customValue // Include calculated custom value
+                    'bet_count' => $betCount,
+                    'total_bet_amount' => $totalBetAmount,
+                    'custom_value' => $customValue,
+                    'event_image' => base64_encode($event['event_image']) // Encode image to base64 for JSON output
                 ];
             }
 
-            // Add outcome if exists
             if ($event['outcome_id'] !== null) {
                 $groupedEvents[$eventId]['outcomes'][] = [
                     'id' => $event['outcome_id'],
