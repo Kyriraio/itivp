@@ -94,19 +94,27 @@ class ApiHandler {
     private function getRequestData(): array
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-            $data = $_POST;
-
-            // Handle the case where no POST data exists
-            return $data ?? [];
+            // Считываем тело запроса (POST)
+            if (!empty($_POST)) {
+                return $_POST;
+            } else {
+                // If there is no POST data, read the raw input
+                $data = json_decode(file_get_contents('php://input'), true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                   // $this->sendError('Invalid JSON data');
+                }
+                return $data ?? []; // Return the JSON data if parsing succeeded
+            }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // Handle GET requests
-            return $_GET;
-        } else {
+            // Обработка GET-запросов
+            $data = $_GET;
+        }
+        else {
             $this->sendError("This request method is not supported");
         }
-    }
 
+        return $data ?? [];
+    }
 
     #[NoReturn] private function sendError(string $message): void
     {
