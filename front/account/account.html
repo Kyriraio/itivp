@@ -36,6 +36,8 @@
     </div>
 </div>
 
+<img id="partnerImage" alt="Partner Image" />
+
 <footer>
     <p>&copy; 2024 Bets Ministry. All rights reserved.</p>
 </footer>
@@ -120,6 +122,32 @@
     if (roleId >= 3) {
         document.getElementById('manageAccountsLink').style.display = 'inline'; // Show Manage Accounts link
     }
+
+
+
+
+    function fetchPartnerImage() {
+        fetch(`http://localhost/BetsMinistry/api/?Command=GetPartnerImageCommand`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const imgElement = document.getElementById('partnerImage');
+                    if (imgElement && data.response) {
+                        imgElement.src = `data:image/png;base64,${data.response}`;
+                    } else {
+                        imgElement.src = '';
+                    }
+                } else {
+                    throw new Error('Failed to load bets: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    // Вызов функции для загрузки изображения при загрузке страницы
+    document.addEventListener('DOMContentLoaded', fetchPartnerImage);
 </script>
 
 </body>

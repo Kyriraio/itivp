@@ -24,6 +24,7 @@ class ApiHandler {
         'GetWithdrawalRequestsCommand' => 'doGetWithdrawalRequestsCommand',
         'ProcessWithdrawalRequestCommand' => 'doProcessWithdrawalRequestCommand',
         'UpdateCoefficientCommand' => 'doUpdateCoefficientCommand',
+        'GetPartnerImageCommand' => 'doGetPartnerImageCommand',
         ];
 
     #[NoReturn] public function handleRequest(): void
@@ -282,6 +283,16 @@ class ApiHandler {
     private function doGetUsersCommand(): array
     {
         $command = new Command\GetUsersCommand();
+
+        return $command->execute();
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doGetPartnerImageCommand(): string
+    {
+        $command = new Command\GetPartnerImageCommand();
 
         return $command->execute();
     }
