@@ -6,12 +6,13 @@ use Application\Request\GetEventsRequest;
 use Database\DBConnection as DB;
 use Exception;
 
-class GetEventsCommand
-{
+class GetEventsCommand {
     private DB $db;
+    private string $imagePath;
 
     public function __construct() {
         $this->db = new DB();
+        $this->imagePath = __DIR__ . '/../../../images/'; // Define path for file storage
     }
 
     /**
@@ -30,31 +31,26 @@ class GetEventsCommand
 
     private function getEvents(?string $startDate, ?string $endDate, ?string $eventSearch): array {
         $sql = "SELECT e.*, 
-                   o.id as outcome_id, 
-                   o.outcome, 
-                   COUNT(b.id) as bet_count,
-                   SUM(b.bet_amount) as total_bet_amount,
-                   e.event_image  -- Select the event image blob
-            FROM events e
-            LEFT JOIN event_outcomes o ON e.id = o.event_id
-            LEFT JOIN bets b ON e.id = b.event_id";
+                       o.id as outcome_id, 
+                       o.outcome, 
+                       COUNT(b.id) as bet_count,
+                       SUM(b.bet_amount) as total_bet_amount
+                FROM events e
+                LEFT JOIN event_outcomes o ON e.id = o.event_id
+                LEFT JOIN bets b ON e.id = b.event_id";
 
         $params = [];
-
         if (!empty($startDate) || !empty($endDate) || !empty($eventSearch)) {
-            $sql .= " WHERE 1=1"; // Simplify for adding conditions
+            $sql .= " WHERE 1=1";
         }
-
         if (!empty($startDate)) {
             $sql .= " AND e.event_date >= :start_date";
             $params[':start_date'] = $startDate;
         }
-
         if (!empty($endDate)) {
             $sql .= " AND e.event_date <= :end_date";
             $params[':end_date'] = $endDate;
         }
-
         if (!empty($eventSearch)) {
             $sql .= " AND e.event_name LIKE :event_search";
             $params[':event_search'] = '%' . $eventSearch . '%';
@@ -62,22 +58,12 @@ class GetEventsCommand
 
         $sql .= " GROUP BY e.id, o.id";
 
-        $coefficients = $this->getCoefficients();
-
         $events = $this->db->fetchAll($sql, $params);
         $groupedEvents = [];
 
         foreach ($events as $event) {
             $eventId = $event['id'];
-            $betCount = (int) $event['bet_count'];
-            $totalBetAmount = (float) $event['total_bet_amount'];
-            $customValue = 0;
-
-            if ($coefficients) {
-                $a1 = $coefficients['total_bets'];
-                $a2 = $coefficients['total_bets_sum'];
-                $customValue = ($a1 * $betCount) + ($a2 * $totalBetAmount);
-            }
+            $eventImage = $this->retrieveEventImage($event); // Retrieve event image
 
             if (!isset($groupedEvents[$eventId])) {
                 $groupedEvents[$eventId] = [
@@ -86,10 +72,9 @@ class GetEventsCommand
                     'event_date' => $event['event_date'],
                     'betting_end_date' => $event['betting_end_date'],
                     'outcomes' => [],
-                    'bet_count' => $betCount,
-                    'total_bet_amount' => $totalBetAmount,
-                    'custom_value' => $customValue,
-                    'event_image' => base64_encode($event['event_image']) // Encode image to base64 for JSON output
+                    'bet_count' => (int)$event['bet_count'],
+                    'total_bet_amount' => (float)$event['total_bet_amount'],
+                    'event_image' => $eventImage
                 ];
             }
 
@@ -104,20 +89,40 @@ class GetEventsCommand
         return array_values($groupedEvents);
     }
 
-    private function getCoefficients(): ?array {
-        // Fetch coefficients using their codes from the coefficients table
-        $sql = "SELECT code, value FROM coefficients WHERE code IN ('total_bets', 'total_bets_sum')";
-        $results = $this->db->fetchAll($sql);
-
-        // Initialize an array to hold the coefficients
-        $coefficients = [];
-
-        // Map results to a more accessible format
-        foreach ($results as $result) {
-            $coefficients[$result['code']] = (float) $result['value'];
+    /**
+     * @throws Exception
+     */
+    private function retrieveEventImage(array $event): ?string {
+        // Если поле event_image заполнено, возвращаем его как base64
+        if (!empty($event['event_image'])) {
+            return base64_encode($event['event_image']);
         }
 
-        // Return the coefficients, or null if they don't exist
-        return !empty($coefficients) ? $coefficients : null;
+        // Иначе ищем файл на сервере
+        $filePath = $this->imagePath . $event['id'];
+
+        // Проверка на существование файла
+        if (!file_exists($filePath)) {
+            //return null;
+            throw new Exception("No file for event : {$event['id']}");
+        }
+
+        // Проверка прав на чтение
+        if (!is_readable($filePath)) {
+           throw new Exception("No read access for image file for event: {$event['id']}");
+        }
+        if(getimagesize($filePath) === false){
+            throw new Exception("File is corrupted for event: {$event['id']}");
+        }
+        // Попытка прочитать файл
+        $imageData = file_get_contents($filePath);
+
+
+        // Проверка целостности файла
+        if ($imageData === false) {
+            throw new Exception("Failed to read image file (file might be corrupted): {$filePath}");
+        }
+
+        return base64_encode($imageData);
     }
 }

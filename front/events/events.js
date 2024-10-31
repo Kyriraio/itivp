@@ -252,5 +252,8 @@ document.addEventListener('DOMContentLoaded', function () {
         placeBetModal.style.display = 'none';
     });
 
+
+
+
     fetchBets(); // Load initial bets
 });

@@ -8,9 +8,11 @@ use Exception;
 
 class RemoveEventCommand {
     private DB $db;
+    private string $imagePath;
 
     public function __construct() {
         $this->db = new DB();
+        $this->imagePath = __DIR__ . '/../../../images/'; // Определяем путь к каталогу изображений
     }
 
     /**
@@ -30,7 +32,7 @@ class RemoveEventCommand {
             throw new Exception('Некорректный ID события.');
         }
 
-        // Удаление события из базы данных
+        // Удаление события из базы данных и связанного изображения
         try {
             $this->removeEvent($eventIdToRemove);
         } catch (Exception $exception) {
@@ -50,9 +52,20 @@ class RemoveEventCommand {
         return !empty($result) && (($result['role_id'] === 3) || ($result['role_id'] === 2)); // Assuming role_id 3 is for 'admin'
     }
 
-
+    /**
+     * @throws Exception
+     */
     private function removeEvent(int $eventId): void {
-        // SQL-запрос для удаления события
+        // Удаление изображения, если оно существует
+        $imageFilePath = $this->imagePath . $eventId;
+
+        if (file_exists($imageFilePath) && is_file($imageFilePath)) {
+            if (!unlink($imageFilePath)) {
+                throw new Exception("Не удалось удалить изображение для события: {$eventId}");
+            }
+        }
+
+        // SQL-запрос для удаления события из базы данных
         $sql = "DELETE FROM events WHERE id = :eventId";
         $this->db->execute($sql, [
             ':eventId' => $eventId
