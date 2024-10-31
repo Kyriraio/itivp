@@ -35,16 +35,9 @@ class AddEventCommand {
         if (empty($eventName) || empty($eventDate) || empty($bettingEndDate)) {
             throw new Exception('Event name, event date, and betting end date cannot be empty.');
         }
-        return self::verifyDate($eventDate);
-
-        $minDate = new \DateTime('1000-01-01');
-        $maxDate = new \DateTime('9999-12-31');
-        if (new \DateTime($eventDate) < $minDate || new \DateTime($eventDate) > $maxDate) {
-            throw new Exception('Event date is out of MySQL DATETIME range. Choose a date between 1000-01-01 and 9999-12-31.');
-        }
-        if (new \DateTime($bettingEndDate) < $minDate || new \DateTime($bettingEndDate) > $maxDate) {
-            throw new Exception('Event date is out of MySQL DATETIME range. Choose a date between 1000-01-01 and 9999-12-31.');
-        }
+        
+        self::verifyDate($eventDate);
+        self::verifyDate($bettingEndDate);
 
         if (new \DateTime($bettingEndDate) > new \DateTime($eventDate)) {
             throw new Exception('Betting end date cannot be after the event date.');
