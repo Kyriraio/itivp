@@ -16,8 +16,16 @@ class AddEventCommand {
     /**
      * @throws Exception
      */
+    static public function verifyDate($date): void
+    {
+        if(\DateTime::createFromFormat('m/d/Y', $date) === false)
+        throw new Exception('Invalid date.');
+    }
+    /**
+     * @throws Exception
+     */
     public function execute(Request\AddEventRequest $request): string {
-        $eventName = $request->getEventName();
+        $eventName = trim($request->getEventName());
         $eventDate = $request->getEventDate();
         $bettingEndDate = $request->getBettingEndDate();
         $option1 = $request->getOption1();  // New: Option 1
@@ -26,6 +34,16 @@ class AddEventCommand {
         // Validate event data
         if (empty($eventName) || empty($eventDate) || empty($bettingEndDate)) {
             throw new Exception('Event name, event date, and betting end date cannot be empty.');
+        }
+        return self::verifyDate($eventDate);
+
+        $minDate = new \DateTime('1000-01-01');
+        $maxDate = new \DateTime('9999-12-31');
+        if (new \DateTime($eventDate) < $minDate || new \DateTime($eventDate) > $maxDate) {
+            throw new Exception('Event date is out of MySQL DATETIME range. Choose a date between 1000-01-01 and 9999-12-31.');
+        }
+        if (new \DateTime($bettingEndDate) < $minDate || new \DateTime($bettingEndDate) > $maxDate) {
+            throw new Exception('Event date is out of MySQL DATETIME range. Choose a date between 1000-01-01 and 9999-12-31.');
         }
 
         if (new \DateTime($bettingEndDate) > new \DateTime($eventDate)) {
