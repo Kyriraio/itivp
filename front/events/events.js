@@ -45,21 +45,22 @@ document.addEventListener('DOMContentLoaded', function () {
             bets.forEach(bet => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                <td>${bet.event_name}</td>
-                <td>${bet.event_date}</td>
-                <td>${bet.betting_end_date}</td>
-                <td>
-                    ${roleId >= 2 ? `<button class="deleteBetButton" data-id="${bet.id}">Delete</button>` : ''}
-                    <button class="placeBetButton" data-id="${bet.id}" data-outcomes='${JSON.stringify(bet.outcomes)}'>Bet</button>
-                </td>
-            `;
+                    <td>${bet.event_name}</td>
+                    <td>${bet.event_date}</td>
+                    <td>${bet.betting_end_date}</td>
+                    <td>
+                        ${roleId >= 2 ? `<button class="deleteBetButton" data-id="${bet.id}">Delete</button>` : ''}
+                        <button class="placeBetButton" data-id="${bet.id}" data-outcomes='${JSON.stringify(bet.outcomes)}'>Bet</button>
+                        ${roleId >= 2 ? `<button class="editBetButton" data-id="${bet.id}" data-bet='${JSON.stringify(bet)}'>Edit</button>` : ''}
+                    </td>
+                `;
                 betsTableBody.appendChild(row);
             });
 
-            // Add event listeners for the buttons
             document.querySelectorAll('.editBetButton').forEach(button => {
-                button.addEventListener('click', openEditBetModal); // Edit bet listener
+                button.addEventListener('click', openEditBetModal); // добавляем слушатель событий на кнопку Edit
             });
+
             document.querySelectorAll('.deleteBetButton').forEach(button => {
                 button.addEventListener('click', deleteEvent); // Delete bet listener
             });
@@ -71,6 +72,72 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('An error occurred while rendering the bets. Please try again later.'); // Notify user
         }
     }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];  // Formats to 'YYYY-MM-DD'
+    }
+    function openEditBetModal(event) {
+        const betData = JSON.parse(event.target.getAttribute('data-bet'));
+
+        // Set up the modal fields with the event data
+        document.getElementById('editBetName').value = betData.event_name;
+        document.getElementById('editEventDate').value = formatDate(betData.event_date);
+        document.getElementById('editBettingEndDate').value = formatDate(betData.betting_end_date);
+        document.getElementById('editOption1').value = betData.outcomes[0]?.name || '';
+        document.getElementById('editOption2').value = betData.outcomes[1]?.name || '';
+
+        // Store outcome IDs in hidden fields or variables
+        document.getElementById('editOption1').dataset.outcomeId = betData.outcomes[0]?.id || null;
+        document.getElementById('editOption2').dataset.outcomeId = betData.outcomes[1]?.id || null;
+
+        currentBet = betData.id;
+        document.getElementById('editBetModal').style.display = 'block';
+
+        document.getElementById('saveEditBetButton').onclick = () => saveEditBet(currentBet);
+    }
+
+
+    function saveEditBet(betId) {
+        const updatedBet = {
+            betId: betId,
+            eventName: document.getElementById('editBetName').value,
+            eventDate: document.getElementById('editEventDate').value,
+            bettingEndDate: document.getElementById('editBettingEndDate').value,
+            option1: {
+                name: document.getElementById('editOption1').value,
+                id: document.getElementById('editOption1').dataset.outcomeId // Include outcome ID
+            },
+            option2: {
+                name: document.getElementById('editOption2').value,
+                id: document.getElementById('editOption2').dataset.outcomeId // Include outcome ID
+            },
+            userId: localStorage.getItem('userId')
+        };
+
+        fetch(`http://localhost/BetsMinistry/api/?Command=EditEventCommand`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedBet)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('editBetModal').style.display = 'none';
+                    fetchBets();
+                } else {
+                    alert(data.message || 'Failed to edit bet.');
+                }
+            })
+            .catch(error => {
+                console.error('Error editing bet:', error);
+            });
+    }
+
+
+    document.getElementById('cancelEditBetButton').addEventListener('click', () => {
+        document.getElementById('editBetModal').style.display = 'none';
+    });
 
 
     function openPlaceBetModal(event) {

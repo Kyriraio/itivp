@@ -18,8 +18,9 @@ class AddEventCommand {
      */
     static public function verifyDate($date): void
     {
-        if(\DateTime::createFromFormat('m/d/Y', $date) === false)
-        throw new Exception('Invalid date.');
+        if (\DateTime::createFromFormat('Y-m-d', $date) === false) {
+            throw new Exception('Invalid date format.');
+        }
     }
     /**
      * @throws Exception

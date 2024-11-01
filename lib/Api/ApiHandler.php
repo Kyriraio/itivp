@@ -17,6 +17,7 @@ class ApiHandler {
         'GetEventsCommand' => 'doGetEventsCommand',
         'PlaceBetCommand' => 'doPlaceBetCommand',
         'GetUserInfoCommand' => 'doGetUserInfoCommand',
+        'EditEventCommand' => 'doEditEventCommand',
         ];
 
     #[NoReturn] public function handleRequest(): void
@@ -201,8 +202,22 @@ class ApiHandler {
         $requestData = $this->getRequestData();
 
         $this->validateToken($requestData);
-        $this->validatePermission(1);
+        //$this->validatePermission(1);
         $request = new Request\AddEventRequest($requestData['eventName'], $requestData['eventDate'], $requestData['bettingEndDate'], $requestData['option1'], $requestData['option2']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doEditEventCommand(): string
+    {
+        $command = new Command\EditEventCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+        //$this->validatePermission(1);
+        $request = new Request\EditEventRequest($requestData['betId'],$requestData['eventName'], $requestData['eventDate'], $requestData['bettingEndDate'], $requestData['option1'], $requestData['option2']);
         return $command->execute($request);
     }
 
