@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bets History</title>
+    <link rel="stylesheet" href="history.css">
+</head>
+<body>
+<header>
+    <nav>
+        <a href="../account/account.html">Account Page</a>
+        <a href="../events/events.html">Events Page</a>
+        <a id="manageAccountsLink" href="../accounts_manage/accounts_manage.html">Manage Accounts</a>
+        <a href="../history/history.html">Bets History</a>
+        <a href="../register/register.html">Register</a>
+        <a href="../auth/auth.html">Login</a>
+    </nav>
+</header>
+<h1>Bets History</h1>
+<table id="betsTable">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Event</th>
+        <th>Outcome</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Date</th>
+    </tr>
+    </thead>
+    <tbody id="betsTableBody">
+    <tr><td colspan="6">Loading...</td></tr>
+    </tbody>
+</table>
+
+<script>
+    function fetchBetsHistory() {
+        const betsTableBody = document.getElementById('betsTableBody');
+        betsTableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+
+        const userId = parseInt(localStorage.getItem('userId'));
+
+        fetch('http://localhost/BetsMinistry/api/?Command=GetBetsHistoryCommand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId})
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    renderBetsHistory(data.response);
+                } else {
+                    throw new Error(data.message || 'Failed to load bets history');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching bets history:', error);
+                betsTableBody.innerHTML = `<tr><td colspan="6">Error loading data: ${error.message}</td></tr>`;
+            });
+    }
+
+    function renderBetsHistory(bets) {
+        const betsTableBody = document.getElementById('betsTableBody');
+        betsTableBody.innerHTML = '';
+
+        if (bets.length === 0) {
+            betsTableBody.innerHTML = '<tr><td colspan="6">No bets found</td></tr>';
+            return;
+        }
+
+        bets.forEach(bet => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${bet.username || 'N/A'}</td>
+                <td>${bet.event_name}</td>
+                <td>${bet.outcome}</td>
+                <td>${bet.bet_amount}</td>
+                <td>${bet.status}</td>
+                <td>${new Date(bet.created_at).toLocaleString()}</td>
+            `;
+            betsTableBody.appendChild(row);
+        });
+    }
+
+    fetchBetsHistory();
+</script>
+</body>
+</html>

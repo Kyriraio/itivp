@@ -19,7 +19,8 @@ class ApiHandler {
         'PlaceBetCommand' => 'doPlaceBetCommand',
         'GetUserInfoCommand' => 'doGetUserInfoCommand',
         'GetUsersCommand' => 'doGetUsersCommand',
-        ];
+        'GetBetsHistoryCommand' => 'doGetBetsHistoryCommand',
+    ];
 
     #[NoReturn] public function handleRequest(): void
     {
@@ -192,6 +193,18 @@ class ApiHandler {
         $requestData = $this->getRequestData();
 
         $request = new Request\AuthUserRequest($requestData['username'], $requestData['password']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doGetBetsHistoryCommand(): array
+    {
+        $command = new Command\GetBetsHistoryCommand();
+        $requestData = $this->getRequestData();
+
+        $request = new Request\GetBetsHistoryRequest($requestData['userId']);
         return $command->execute($request);
     }
 
