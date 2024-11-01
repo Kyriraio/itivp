@@ -272,6 +272,8 @@ class ApiHandler {
         $command = new Command\GetEventsCommand();
         $requestData = $this->getRequestData();
 
+        $this->validateToken($requestData);
+
         $request = new Request\GetEventsRequest(
             $requestData['startDate'] ?? null,
                 $requestData['endDate'] ?? null,

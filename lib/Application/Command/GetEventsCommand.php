@@ -21,24 +21,27 @@ class GetEventsCommand
         $startDate = $request->getStartDate();
         $endDate = $request->getEndDate();
         $eventSearch = $request->getEventSearch();
+
         try {
-            return $this->getEvents($startDate, $endDate, $eventSearch);
+            $isManager = $this->isManager($_SESSION['USER_TOKEN']);
+            return $this->getEvents($startDate, $endDate, $eventSearch, $_SESSION['USER_TOKEN'], $isManager);
         } catch (Exception $exception) {
             throw new Exception('Failure during fetching events: ' . $exception->getMessage());
         }
     }
 
-    private function getEvents(?string $startDate, ?string $endDate, ?string $eventSearch): array {
+    private function getEvents(?string $startDate, ?string $endDate, ?string $eventSearch, int $userId, bool $isManager): array {
         $sql = "SELECT e.*, o.id as outcome_id, o.outcome
                 FROM events e
-                LEFT JOIN event_outcomes o ON e.id = o.event_id"; // Added a placeholder to simplify appending conditions
+                LEFT JOIN event_outcomes o ON e.id = o.event_id";
 
         $params = [];
 
-        if (!empty($startDate) || !empty($endDate) || !empty($eventSearch)) {
-            $sql .= " WHERE 1=1"; // A trick to make appending conditions easier
+        // Build conditional filters
+        if (!empty($startDate) || !empty($endDate) || !empty($eventSearch) || $isManager) {
+            $sql .= " WHERE 1=1";
         }
-        
+
         if (!empty($startDate)) {
             $sql .= " AND e.event_date >= :start_date";
             $params[':start_date'] = $startDate;
@@ -52,6 +55,12 @@ class GetEventsCommand
         if (!empty($eventSearch)) {
             $sql .= " AND e.event_name LIKE :event_search";
             $params[':event_search'] = '%' . $eventSearch . '%';
+        }
+
+        // Apply `creator_id` filter if the user is a manager
+        if ($isManager) {
+            $sql .= " AND e.creator_id = :creator_id";
+            $params[':creator_id'] = $userId;
         }
 
         $sql .= " ORDER BY e.event_date DESC";
@@ -80,5 +89,11 @@ class GetEventsCommand
         }
 
         return array_values($groupedEvents);
+    }
+
+    private function isManager(int $userId): bool {
+        $sql = "SELECT role_id FROM users WHERE id = :userId";
+        $result = $this->db->fetch($sql, [':userId' => $userId]);
+        return !empty($result) && ($result['role_id'] === 2);
     }
 }

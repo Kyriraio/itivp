@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function fetchBets(startDate = '', endDate = '', eventSearch = '') {
         betsTableBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
 
-        fetch(`http://localhost/BetsMinistry/api/?Command=GetEventsCommand&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&eventSearch=${encodeURIComponent(eventSearch)}`)
+        fetch(`http://localhost/BetsMinistry/api/?Command=GetEventsCommand&userId=${encodeURIComponent(localStorage.getItem('userId'))}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&eventSearch=${encodeURIComponent(eventSearch)}`)
             .then(response => response.json())
             .then(data => {
                 // Check if the status is "success" and handle data accordingly

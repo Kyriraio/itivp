@@ -55,12 +55,13 @@ class AddEventCommand {
      * Insert event into the database and return the event ID.
      */
     private function addEvent(string $eventName, string $eventDate, string $bettingEndDate): int {
-        $sql = "INSERT INTO events (event_name, event_date, betting_end_date) 
-                VALUES (:event_name, :event_date, :betting_end_date)";
+        $sql = "INSERT INTO events (event_name, event_date, betting_end_date, creator_id) 
+                VALUES (:event_name, :event_date, :betting_end_date, :creator_id)";
         $this->db->execute($sql, [
             ':event_name' => $eventName,
             ':event_date' => $eventDate,
             ':betting_end_date' => $bettingEndDate,
+            ':creator_id' => $_SESSION['USER_TOKEN'],
         ]);
 
         // Get the last inserted event ID
