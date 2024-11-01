@@ -1,5 +1,4 @@
 <?php
-
 namespace Application\Command;
 
 use Application\Request;
@@ -22,6 +21,7 @@ class AddEventCommand {
             throw new Exception('Invalid date format.');
         }
     }
+
     /**
      * @throws Exception
      */
@@ -36,7 +36,7 @@ class AddEventCommand {
         if (empty($eventName) || empty($eventDate) || empty($bettingEndDate)) {
             throw new Exception('Event name, event date, and betting end date cannot be empty.');
         }
-        
+
         self::verifyDate($eventDate);
         self::verifyDate($bettingEndDate);
 
@@ -51,11 +51,7 @@ class AddEventCommand {
 
         // Insert the event into the database and get its ID
         try {
-            $eventId = $this->addEvent($eventName, $eventDate, $bettingEndDate);
-
-            // Add event outcomes (options) to the database
-            $this->addEventOutcomes($eventId, $option1, $option2);
-
+            $this->addEventWithOutcomes($eventName, $eventDate, $bettingEndDate, $option1, $option2);
         } catch (Exception $exception) {
             throw new Exception('Failure during event creation: ' . $exception->getMessage());
         }
@@ -64,37 +60,18 @@ class AddEventCommand {
     }
 
     /**
-     * Insert event into the database and return the event ID.
+     * Call the stored procedure to insert event and outcomes.
      */
-    private function addEvent(string $eventName, string $eventDate, string $bettingEndDate): int {
-        $sql = "INSERT INTO events (event_name, event_date, betting_end_date) 
-                VALUES (:event_name, :event_date, :betting_end_date)";
+    private function addEventWithOutcomes(string $eventName, string $eventDate, string $bettingEndDate, string $option1, string $option2): void {
+        // Call the stored procedure
+        $sql = "CALL AddEvent(:event_name, :event_date, :betting_end_date, :outcome1, :outcome2, @eventId)";
         $this->db->execute($sql, [
             ':event_name' => $eventName,
             ':event_date' => $eventDate,
             ':betting_end_date' => $bettingEndDate,
-        ]);
-
-        // Get the last inserted event ID
-        return (int)$this->db->lastInsertId();
-    }
-
-    /**
-     * Insert event outcomes into the event_outcomes table.
-     */
-    private function addEventOutcomes(int $eventId, string $option1, string $option2): void {
-        $sql = "INSERT INTO event_outcomes (event_id, outcome) VALUES (:event_id, :outcome)";
-
-        // Insert first outcome
-        $this->db->execute($sql, [
-            ':event_id' => $eventId,
-            ':outcome' => $option1,
-        ]);
-
-        // Insert second outcome
-        $this->db->execute($sql, [
-            ':event_id' => $eventId,
-            ':outcome' => $option2,
+            ':outcome1' => $option1,
+            ':outcome2' => $option2,
         ]);
     }
 }
+
