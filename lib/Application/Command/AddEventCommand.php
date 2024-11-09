@@ -105,6 +105,9 @@ class AddEventCommand {
             $mail->Subject = 'New Event Created Successfully';
             $mail->Body = "The event '{$eventName}' has been created successfully.";
 
+            if (!$mail->send()) {
+                throw new Exception( 'Error: ' . $mail->ErrorInfo);
+            }
        } catch (PHPMailerException $e) {
             throw new Exception("Email could not be sent. Mailer Error: " . $e->getMessage());
         }
