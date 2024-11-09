@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'PHPMailer\\PHPMailer\\' => array($vendorDir . '/phpmailer/phpmailer/src'),
     'Database\\' => array($baseDir . '/lib/Database'),
     'Application\\' => array($baseDir . '/lib/Application'),
     'Api\\' => array($baseDir . '/lib/Api'),

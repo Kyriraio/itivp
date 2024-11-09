@@ -1,10 +1,12 @@
 <?php
-
 namespace Application\Command;
 
 use Application\Request;
 use Database\DBConnection as DB;
 use Exception;
+use Throwable;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 class AddEventCommand {
     private DB $db;
@@ -20,10 +22,9 @@ class AddEventCommand {
         $eventName = $request->getEventName();
         $eventDate = $request->getEventDate();
         $bettingEndDate = $request->getBettingEndDate();
-        $option1 = $request->getOption1();  // New: Option 1
-        $option2 = $request->getOption2();  // New: Option 2
+        $option1 = $request->getOption1();
+        $option2 = $request->getOption2();
 
-        // Validate event data
         if (empty($eventName) || empty($eventDate) || empty($bettingEndDate)) {
             throw new Exception('Event name, event date, and betting end date cannot be empty.');
         }
@@ -32,30 +33,26 @@ class AddEventCommand {
             throw new Exception('Betting end date cannot be after the event date.');
         }
 
-        // Validate options data
         if (empty($option1) || empty($option2)) {
             throw new Exception('Both outcome options must be provided.');
         }
 
-        // Insert the event into the database and get its ID
         try {
             $eventId = $this->addEvent($eventName, $eventDate, $bettingEndDate);
-
-            // Add event outcomes (options) to the database
             $this->addEventOutcomes($eventId, $option1, $option2);
 
-        } catch (Exception $exception) {
+            // Send confirmation email
+            $this->sendConfirmationEmail($eventName);
+
+        } catch (Throwable $exception) {
             throw new Exception('Failure during event creation: ' . $exception->getMessage());
         }
 
         return 'Event created successfully: ' . $eventName;
     }
 
-    /**
-     * Insert event into the database and return the event ID.
-     */
     private function addEvent(string $eventName, string $eventDate, string $bettingEndDate): int {
-        $sql = "INSERT INTO events (event_name, event_date, betting_end_date, creator_id) 
+        $sql = "INSERT INTO events (event_name, event_date, betting_end_date, creator_id)
                 VALUES (:event_name, :event_date, :betting_end_date, :creator_id)";
         $this->db->execute($sql, [
             ':event_name' => $eventName,
@@ -64,26 +61,52 @@ class AddEventCommand {
             ':creator_id' => $_SESSION['USER_TOKEN'],
         ]);
 
-        // Get the last inserted event ID
         return (int)$this->db->lastInsertId();
     }
 
-    /**
-     * Insert event outcomes into the event_outcomes table.
-     */
     private function addEventOutcomes(int $eventId, string $option1, string $option2): void {
         $sql = "INSERT INTO event_outcomes (event_id, outcome) VALUES (:event_id, :outcome)";
 
-        // Insert first outcome
         $this->db->execute($sql, [
             ':event_id' => $eventId,
             ':outcome' => $option1,
         ]);
 
-        // Insert second outcome
         $this->db->execute($sql, [
             ':event_id' => $eventId,
             ':outcome' => $option2,
         ]);
+    }
+
+    /**
+     * Send a confirmation email after event creation.
+     * @throws Exception
+     */
+    private function sendConfirmationEmail(string $eventName): void {
+        try {
+            // SMTP settings
+            $mail = new PHPMailer;
+            $mail->isSMTP();
+
+            $mail->SMTPDebug = 1;
+
+            $mail->Host = 'smtp.mail.ru';
+
+            $mail->SMTPAuth = true;
+            $mail->Username = 'vlad_berezka3@mail.ru'; // логин от вашей почты
+            $mail->Password = 'DyLrR7VeLUcbeQrDs5kN'; // пароль от почтового ящика
+            $mail->SMTPSecure = 'SSL';
+            $mail->Port = '587';
+            $mail->CharSet = 'UTF-8';
+
+            $mail->setFrom('vlad_berezka3@mail.ru', 'Name'); // Адрес самой почты и имя отправителя
+            $mail->addAddress('vlad_berezka3@mail.ru','Администратор');
+
+            $mail->Subject = 'New Event Created Successfully';
+            $mail->Body = "The event '{$eventName}' has been created successfully.";
+
+       } catch (PHPMailerException $e) {
+            throw new Exception("Email could not be sent. Mailer Error: " . $e->getMessage());
+        }
     }
 }
