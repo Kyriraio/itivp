@@ -219,13 +219,18 @@ document.addEventListener('DOMContentLoaded', function () {
         saveBetButton.onclick = () => saveBet(bet.id);
     }
 
+    function getDate()
+    {
+        let date = new Date();
+        return date.getFullYear()+"-"+date.getMonth()+"-"+date.getDate();
+    }
     function saveBet() {
         const userId = localStorage.getItem('userId'); // Get userId from local storage
 
         const newBet = {
             eventName: document.getElementById('betName').value,
-            eventDate: document.getElementById('eventDate').value,
-            bettingEndDate: document.getElementById('bettingEndDate').value,
+            eventDate: document.getElementById('eventDate').value || getDate(),
+            bettingEndDate: document.getElementById('bettingEndDate').value || getDate(),
             option1: document.getElementById('option1').value,
             option2: document.getElementById('option2').value,
             userId: userId // Include userId in the body
