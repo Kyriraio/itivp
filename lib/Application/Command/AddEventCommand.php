@@ -51,6 +51,11 @@ class AddEventCommand {
         $eventImage = $request->getEventImage();
         $eventImageData = base64_decode($eventImage);
 
+        // Проверяем, является ли файл изображением
+        if ($eventImageData && !$this->isValidImage($eventImageData)) {
+            throw new Exception('Uploaded file is not a valid image.');
+        }
+
         // Insert the event into the database to get the event ID
         $eventId = $this->addEvent($eventName, $eventDate, $bettingEndDate, $roleId === 3 ? $eventImageData : null);
 
@@ -64,6 +69,25 @@ class AddEventCommand {
 
         return 'Event created successfully: ' . $eventName;
     }
+
+    /**
+     * Checks if the provided data is a valid image.
+     */
+    private function isValidImage(string $imageData): bool {
+        // Создаем временный файл из данных изображения для проверки
+        $tempFile = tmpfile();
+        fwrite($tempFile, $imageData);
+        $tempFilePath = stream_get_meta_data($tempFile)['uri'];
+
+        // Проверяем, является ли файл изображением
+        $isValid = getimagesize($tempFilePath) !== false;
+
+        // Закрываем временный файл
+        fclose($tempFile);
+
+        return $isValid;
+    }
+
 
     private function addEvent(string $eventName, string $eventDate, string $bettingEndDate, ?string $eventImageData): int {
         $sql = "INSERT INTO events (event_name, event_date, betting_end_date, event_image) 
