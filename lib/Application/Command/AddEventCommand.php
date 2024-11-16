@@ -70,24 +70,26 @@ class AddEventCommand {
         return 'Event created successfully: ' . $eventName;
     }
 
-    /**
-     * Checks if the provided data is a valid image.
-     */
+
     private function isValidImage(string $imageData): bool {
-        // Создаем временный файл из данных изображения для проверки
         $tempFile = tmpfile();
         fwrite($tempFile, $imageData);
         $tempFilePath = stream_get_meta_data($tempFile)['uri'];
 
-        // Проверяем, является ли файл изображением
-        $isValid = getimagesize($tempFilePath) !== false;
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $tempFilePath);
+        finfo_close($finfo);
 
-        // Закрываем временный файл
+        $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+        if (!in_array($mimeType, $allowedMimeTypes)) {
+            fclose($tempFile);
+            return false;
+        }
         fclose($tempFile);
 
-        return $isValid;
+        return true;
     }
-
 
     private function addEvent(string $eventName, string $eventDate, string $bettingEndDate, ?string $eventImageData): int {
         $sql = "INSERT INTO events (event_name, event_date, betting_end_date, event_image) 
