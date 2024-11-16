@@ -33,12 +33,12 @@ class GetEventsCommand
                        COUNT(b.id) as bet_count
                 FROM events e
                 LEFT JOIN event_outcomes o ON e.id = o.event_id
-                LEFT JOIN bets b ON e.id = b.event_id"; // Присоединяем таблицу ставок для подсчета количества
+                LEFT JOIN bets b ON e.id = b.event_id";
 
         $params = [];
 
         if (!empty($startDate) || !empty($endDate) || !empty($eventSearch)) {
-            $sql .= " WHERE 1=1"; // Упрощение для добавления условий
+            $sql .= " WHERE 1=1";
         }
 
         if (!empty($startDate)) {
@@ -56,12 +56,14 @@ class GetEventsCommand
             $params[':event_search'] = '%' . $eventSearch . '%';
         }
 
-        $sql .= " GROUP BY e.id, o.id
-                  ORDER BY bet_count DESC, e.event_date DESC"; // Сортировка по количеству ставок и дате события
+        $sql .= " GROUP BY e.id, o.id";
 
         $events = $this->db->fetchAll($sql, $params);
 
-        // Группировка исходов по каждому событию
+        $betCounts = array_column($events, 'bet_count');
+        sort($betCounts);
+        $medianBetCount = $this->calculateMedian($betCounts);
+
         $groupedEvents = [];
         foreach ($events as $event) {
             $eventId = $event['id'];
@@ -71,6 +73,8 @@ class GetEventsCommand
                     'event_name' => $event['event_name'],
                     'event_date' => $event['event_date'],
                     'betting_end_date' => $event['betting_end_date'],
+                    'bet_count' => $event['bet_count'],
+                    'bet_count_diff' => abs($event['bet_count'] - $medianBetCount),
                     'outcomes' => []
                 ];
             }
@@ -82,6 +86,25 @@ class GetEventsCommand
             }
         }
 
+        usort($groupedEvents, function ($a, $b) {
+            return $a['bet_count_diff'] <=> $b['bet_count_diff'];
+        });
+
         return array_values($groupedEvents);
+    }
+
+    private function calculateMedian(array $numbers): float {
+        $count = count($numbers);
+        if ($count === 0) {
+            return 0;
+        }
+
+        $middleIndex = (int) floor($count / 2);
+
+        if ($count % 2) {
+            return $numbers[$middleIndex];
+        }
+
+        return ($numbers[$middleIndex - 1] + $numbers[$middleIndex]) / 2;
     }
 }
