@@ -23,7 +23,7 @@ class RemoveEventCommand {
         $eventIdToRemove = $request->getEventId();
 
         // Проверка, имеет ли пользователь права администратора или модератора
-        if (!$this->isAdmin($_SESSION["USER_TOKEN"])) {
+        if (!$this->isAdmin($_SERVER["USER_TOKEN"])) {
             throw new Exception('Только администраторы или модераторы могут удалять события.');
         }
 

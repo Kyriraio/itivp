@@ -21,7 +21,7 @@ class RemoveUserCommand {
         $userIdToRemove = $request->getUserId();
 
         // Validate that the initiator has the correct role
-        if (!$this->isAdmin($_SESSION['USER_TOKEN'])) {
+        if (!$this->isAdmin($_SERVER['USER_TOKEN'])) {
             throw new Exception('Only users with admin role can remove other users.');
         }
 
@@ -31,7 +31,7 @@ class RemoveUserCommand {
         }
 
         // Prevent user from removing themselves
-        if ($userIdToRemove === $_SESSION['USER_TOKEN']) {
+        if ($userIdToRemove === $_SERVER['USER_TOKEN']) {
             throw new Exception('You cannot ban yourself.');
         }
 

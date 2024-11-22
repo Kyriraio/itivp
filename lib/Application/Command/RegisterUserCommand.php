@@ -42,6 +42,7 @@ class RegisterUserCommand {
         try {
             $userId = $this->registerUser($username, $hashedPassword);
             $roleId = $this->getUserRole($userId); // Get the user's role after registration
+
             return [
                 'userId' => $userId,
                 'roleId' => $roleId // Return user ID and role ID

@@ -25,6 +25,9 @@ class ApiHandler {
         'ProcessWithdrawalRequestCommand' => 'doProcessWithdrawalRequestCommand',
         'UpdateCoefficientCommand' => 'doUpdateCoefficientCommand',
         'GetPartnerImageCommand' => 'doGetPartnerImageCommand',
+        'LogoutUserCommand' => 'doLogoutUserCommand',
+        'LoadSessionEventFilterCommand' => 'doLoadSessionEventFilterCommand',
+        'SaveSessionEventFilterCommand' => 'doSaveSessionEventFilterCommand',
         ];
 
     #[NoReturn] public function handleRequest(): void
@@ -90,7 +93,7 @@ class ApiHandler {
             throw new Exception('Not provided authorization token');
         }
 
-        $_SESSION['USER_TOKEN'] = $request['userId'];
+        $_SERVER['USER_TOKEN'] = $request['userId'];
     }
     private function getRequestData(): array
     {
@@ -135,11 +138,11 @@ class ApiHandler {
     private function validatePermission(array $allowedRoleIds): void
     {
         // Get the userId from the session
-        if (!isset($_SESSION['USER_TOKEN'])) {
+        if (!isset($_SERVER['USER_TOKEN'])) {
             throw new Exception('User is not logged in.'); // Handle unauthenticated access
         }
 
-        $userId = $_SESSION['USER_TOKEN'];
+        $userId = $_SERVER['USER_TOKEN'];
 
         // Create a new database connection
         $db = new \Database\DBConnection();
@@ -220,6 +223,47 @@ class ApiHandler {
 
         $request = new Request\PlaceBetRequest($requestData['betId'], $requestData['amount'],$requestData['outcome']);
         return $command->execute($request);
+    }
+
+
+    /**
+     * @throws Exception
+     */
+    private function doLogoutUserCommand(): string
+    {
+        $command = new Command\LogoutUserCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+
+        return $command->execute();
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doSaveSessionEventFilterCommand(): string
+    {
+        $command = new Command\SaveSessionEventFilterCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+
+        $request = new Request\SaveSessionEventFilterRequest($requestData['eventTitle']);
+        return $command->execute($request);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doLoadSessionEventFilterCommand(): array
+    {
+        $command = new Command\LoadSessionEventFilterCommand();
+        $requestData = $this->getRequestData();
+
+        $this->validateToken($requestData);
+
+        return $command->execute();
     }
 
     /**

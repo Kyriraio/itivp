@@ -67,6 +67,6 @@ class PlaceBetCommand {
     }
 
     private function getCurrentUserId(): int {
-        return $_SESSION['USER_TOKEN'];
+        return $_SERVER['USER_TOKEN'];
     }
 }

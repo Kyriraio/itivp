@@ -32,7 +32,7 @@ class AddEventCommand {
         $bettingEndDate = $request->getBettingEndDate();
         $option1 = $request->getOption1();
         $option2 = $request->getOption2();
-        $roleId = $this->getUserRole($_SESSION['USER_TOKEN']); // Role ID of the user adding the event
+        $roleId = $this->getUserRole($_SERVER['USER_TOKEN']); // Role ID of the user adding the event
 
         // Validate input
         if (empty($eventName) || empty($eventDate) || empty($bettingEndDate)) {

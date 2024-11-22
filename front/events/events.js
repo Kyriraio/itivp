@@ -252,6 +252,72 @@ document.addEventListener('DOMContentLoaded', function () {
         placeBetModal.style.display = 'none';
     });
 
+// Функция для сохранения даты в куки
+    function setCookie(name, value, days) {
+        let date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        let expires = "expires=" + date.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    }
+
+// Функция для получения значения куки
+    function getCookie(name) {
+        let nameEQ = name + "=";
+        let ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+// Обработчик для сохранения значений в куки и сессию
+        const eventInput = document.getElementById('eventSearchInput');
+        const startDate = document.getElementById('startDate');
+        const endDate = document.getElementById('endDate');
+
+        // Восстановление дат из куки при загрузке страницы
+        startDate.value = getCookie('startDate') || '';
+        endDate.value = getCookie('endDate') || '';
+
+        fetch('http://localhost/BetsMinistry/api/?Command=LoadSessionEventFilterCommand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: localStorage.getItem('userId')})
+        })
+            .then(response => response.json())
+            .then(data => {
+                eventInput.value = data.response.eventTitle || '';
+
+                fetchBets(startDate.value, endDate.value, eventInput.value.trim());
+
+            })
+            .catch(error => {
+                console.error('Error loading event filter:', error);
+            });
+
+
+        // Событие на изменение даты, чтобы сохранять значения в куки
+        startDate.addEventListener('change', function () {
+            setCookie('startDate', startDate.value, 7); // Сохраняем на 7 дней
+        });
+
+        endDate.addEventListener('change', function () {
+            setCookie('endDate', endDate.value, 7); // Сохраняем на 7 дней
+        });
+
+        eventInput.addEventListener('input', function () {
+            const eventTitle = eventInput.value;
+
+            fetch(`http://localhost/BetsMinistry/api/?Command=SaveSessionEventFilterCommand`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventTitle: eventTitle, userId: localStorage.getItem('userId')})
+            })
+                .then(response => response.json())
+                .catch(error => console.error('Error saving session event filter:', error));
+        });
 
 
 

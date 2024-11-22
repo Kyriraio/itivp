@@ -81,8 +81,22 @@
 
     // Logout function
     document.getElementById('logoutButton').addEventListener('click', function () {
-        localStorage.removeItem('userId'); // Remove userId from local storage
-        window.location.href = "../auth/auth.html"; // Redirect to login page
+        fetch(`http://localhost/BetsMinistry/api/?Command=LogoutUserCommand`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({userId: localStorage.getItem('userId')})
+        })
+            .then(response => response.json())
+            .then(() => {
+                localStorage.removeItem('userId'); // Remove userId from local storage
+                window.location.href = "../auth/auth.html"; // Redirect to login page
+            })
+            .catch(error => {
+                console.error('Error during logout:', error);
+                alert('An error occurred during user logout.');
+            });
     });
 
     // Function to handle withdrawal request

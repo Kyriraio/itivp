@@ -34,7 +34,6 @@ class AuthUserCommand {
      * @throws Exception
      */
     private function authenticateUser(string $username, string $password): array {
-        // Prepare the SQL statement
         $sql = "SELECT id, password, role_id FROM users WHERE username = :username";
 
         // Fetch user data
