@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "husky": "^4.3.8"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "./vendor/bin/phpunit tests"
+    }
+  }
+}
