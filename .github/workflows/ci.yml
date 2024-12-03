@@ -3,16 +3,32 @@ name: CI for Bets Ministry
 on:
   push:
     branches:
-      - lab8
+      - lab8  # или любая ветка, для которой вы хотите запускать CI
   pull_request:
+    branches:
+      - lab8  # или любая ветка, для которой вы хотите запускать CI
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-latest  # Запуск на виртуальной машине с Windows
 
     steps:
+      # Шаг 1: Получить код
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Шаг 2: Установить PHP (в вашем случае 8.2)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      # Шаг 3: Установить зависимости через Composer
+      - name: Install dependencies
+        run: |
+          composer install  # Устанавливает зависимости
+
+      # Шаг 4: Запустить тесты с помощью PHPUnit
       - name: Run tests
-        run: ./vendor/bin/phpunit tests
+        run: |
+          ./vendor/bin/phpunit tests  # Запускает тесты
