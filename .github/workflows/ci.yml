@@ -3,10 +3,10 @@ name: CI for Bets Ministry
 on:
   push:
     branches:
-      - lab8  # или любая ветка, для которой вы хотите запускать CI
+      - lab8
   pull_request:
     branches:
-      - lab8  # или любая ветка, для которой вы хотите запускать CI
+      - lab8
 
 jobs:
   build:
@@ -17,11 +17,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Шаг 2: Установить PHP (в вашем случае 8.2)
+      # Шаг 2: Установить PHP с расширениями, включая ext-fileinfo
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: ext-fileinfo  # Устанавливаем нужные расширения
 
       # Шаг 3: Установить зависимости через Composer
       - name: Install dependencies
