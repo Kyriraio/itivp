@@ -73,6 +73,7 @@ class AddEventCommand {
 
     public function isValidImage(string $imageData): bool {
         return true;
+
         $tempFile = tmpfile();
         fwrite($tempFile, $imageData);
         $tempFilePath = stream_get_meta_data($tempFile)['uri'];

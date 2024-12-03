@@ -3,7 +3,7 @@ name: CI for Bets Ministry
 on:
   push:
     branches:
-      - main
+      - lab8
   pull_request:
 
 jobs:
