@@ -24,12 +24,17 @@ jobs:
           php-version: '8.2'
           extensions: ext-fileinfo  # Устанавливаем нужные расширения
 
-      # Шаг 3: Установить зависимости через Composer
+      # Шаг 3: Запустить composer update, чтобы обновить lock файл
+      - name: Update Composer dependencies
+        run: |
+          composer update  # Запустим composer update для решения проблем с зависимостями
+
+      # Шаг 4: Установить зависимости через Composer
       - name: Install dependencies
         run: |
           composer install  # Устанавливает зависимости
 
-      # Шаг 4: Запустить тесты с помощью PHPUnit
+      # Шаг 5: Запустить тесты с помощью PHPUnit
       - name: Run tests
         run: |
           ./vendor/bin/phpunit tests  # Запускает тесты
