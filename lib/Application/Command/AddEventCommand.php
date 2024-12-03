@@ -72,7 +72,6 @@ class AddEventCommand {
 
 
     public function isValidImage(string $imageData): bool {
-        return true;
 
         $tempFile = tmpfile();
         fwrite($tempFile, $imageData);
