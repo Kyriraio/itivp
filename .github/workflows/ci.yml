@@ -36,5 +36,5 @@ jobs:
 
       # Шаг 5: Запустить тесты с помощью PHPUnit
       - name: Run tests
-        run: |
+        run: | 
           ./vendor/bin/phpunit tests  # Запускает тесты
