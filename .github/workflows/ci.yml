@@ -17,13 +17,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Шаг 2: Установить PHP с расширениями, включая ext-fileinfo
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: ext-fileinfo  # Устанавливаем нужные расширения
-
       # Шаг 3: Установить необходимые дополнительные инструменты
       - name: Install additional tools
         run: |
