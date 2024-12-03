@@ -27,6 +27,7 @@
         <p><strong>Balance:</strong> <span id="balance"></span></p>
     </div>
     <button id="logoutButton" style="background-color:red">Logout</button>
+    <button id="resetFilterButton">Reset Date Filters</button>
 
     <!-- New section for requesting a withdrawal -->
     <div id="withdrawRequestSection">
@@ -78,6 +79,20 @@
 
     // Fetch account details on page load
     fetchAccountDetails();
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const resetFilterButton = document.getElementById('resetFilterButton');
+
+        function deleteCookie(name) {
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+
+        resetFilterButton.addEventListener('click', function () {
+            deleteCookie('startDate');
+            deleteCookie('endDate');
+        });
+    });
+
 
     // Logout function
     document.getElementById('logoutButton').addEventListener('click', function () {
