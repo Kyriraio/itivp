@@ -5,7 +5,6 @@
       <sourceFolder url="file://$MODULE_DIR$/lib/Api" isTestSource="false" packagePrefix="Api\" />
       <sourceFolder url="file://$MODULE_DIR$/lib/Application" isTestSource="false" packagePrefix="Application\" />
       <sourceFolder url="file://$MODULE_DIR$/lib/Database" isTestSource="false" packagePrefix="Database\" />
-      <sourceFolder url="file://$MODULE_DIR$/spec" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/composer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/myclabs/deep-copy" />
