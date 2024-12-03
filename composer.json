@@ -9,6 +9,7 @@
   "require": {
     "ext-pdo": "*",
     "ext-fileinfo": "*",
-    "phpunit/phpunit": "*"
+    "phpunit/phpunit": "*",
+    "symfony/http-client": "^7.2"
   }
 }

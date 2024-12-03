@@ -35,4 +35,5 @@ class GetEventsRequest
     {
         return $this->eventSearch;
     }
+
 }
