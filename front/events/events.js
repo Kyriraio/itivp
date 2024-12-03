@@ -318,8 +318,4 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .catch(error => console.error('Error saving session event filter:', error));
         });
-
-
-
-    fetchBets(); // Load initial bets
 });

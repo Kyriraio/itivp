@@ -15,7 +15,6 @@ class LogoutUserCommand {
 
         session_unset();
 
-        if()
         session_destroy();
 
         return 'User logged out successfully.';
